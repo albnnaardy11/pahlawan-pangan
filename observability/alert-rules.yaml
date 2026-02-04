@@ -1,0 +1,113 @@
+groups:
+  - name: pahlawan_pangan_alerts
+    interval: 30s
+    rules:
+      # High Claim Latency
+      - alert: HighClaimLatency
+        expr: histogram_quantile(0.95, rate(surplus_claim_latency_seconds_bucket[5m])) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          component: matching-engine
+        annotations:
+          summary: "High claim latency detected"
+          description: "95th percentile claim latency is {{ $value }}s (threshold: 1s)"
+
+      # Critical Claim Latency
+      - alert: CriticalClaimLatency
+        expr: histogram_quantile(0.95, rate(surplus_claim_latency_seconds_bucket[5m])) > 3.0
+        for: 2m
+        labels:
+          severity: critical
+          component: matching-engine
+        annotations:
+          summary: "CRITICAL: Claim latency exceeds 3 seconds"
+          description: "95th percentile claim latency is {{ $value }}s - immediate action required"
+
+      # Engine Saturation
+      - alert: MatchingEngineSaturated
+        expr: matching_engine_saturation_ratio > 0.85
+        for: 3m
+        labels:
+          severity: warning
+          component: matching-engine
+        annotations:
+          summary: "Matching engine approaching saturation"
+          description: "Worker pool saturation at {{ $value | humanizePercentage }}"
+
+      # Critical Saturation
+      - alert: MatchingEngineCriticalSaturation
+        expr: matching_engine_saturation_ratio > 0.95
+        for: 1m
+        labels:
+          severity: critical
+          component: matching-engine
+        annotations:
+          summary: "CRITICAL: Matching engine saturated"
+          description: "Worker pool saturation at {{ $value | humanizePercentage }} - scale immediately"
+
+      # Food Waste Prevention Rate
+      - alert: LowWastePreventionRate
+        expr: rate(food_waste_prevented_tons_total[1h]) < 0.5
+        for: 30m
+        labels:
+          severity: info
+          component: business-metrics
+        annotations:
+          summary: "Low food waste prevention rate"
+          description: "Only {{ $value }} tons/hour prevented in the last hour"
+
+      # Database Connection Pool
+      - alert: DatabaseConnectionPoolExhausted
+        expr: pg_stat_database_numbackends / pg_settings_max_connections > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Database connection pool near exhaustion"
+          description: "{{ $value | humanizePercentage }} of connections in use"
+
+      # Redis Memory
+      - alert: RedisHighMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          component: redis
+        annotations:
+          summary: "Redis memory usage high"
+          description: "Redis using {{ $value | humanizePercentage }} of max memory"
+
+      # Outbox Processing Lag
+      - alert: OutboxProcessingLag
+        expr: count(outbox_events{published="false"}) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          component: outbox
+        annotations:
+          summary: "Outbox events accumulating"
+          description: "{{ $value }} unpublished events in outbox"
+
+      # NATS JetStream Consumer Lag
+      - alert: NATSConsumerLag
+        expr: nats_consumer_num_pending > 10000
+        for: 5m
+        labels:
+          severity: warning
+          component: messaging
+        annotations:
+          summary: "NATS consumer lag detected"
+          description: "{{ $value }} pending messages in stream"
+
+      # Pod Crash Loop
+      - alert: PodCrashLooping
+        expr: rate(kube_pod_container_status_restarts_total{namespace="pahlawan-pangan"}[15m]) > 0
+        for: 5m
+        labels:
+          severity: critical
+          component: kubernetes
+        annotations:
+          summary: "Pod crash looping"
+          description: "Pod {{ $labels.pod }} is crash looping"

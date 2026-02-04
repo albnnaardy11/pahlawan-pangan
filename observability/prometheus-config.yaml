@@ -1,0 +1,76 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'pahlawan-pangan-prod'
+    region: 'global'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - "/etc/prometheus/rules/*.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Matching Engine
+  - job_name: 'matching-engine'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - pahlawan-pangan
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: matching-engine
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+
+  # Redis Cluster
+  - job_name: 'redis-cluster'
+    static_configs:
+      - targets:
+          - redis-cluster-0.redis-cluster:9121
+          - redis-cluster-1.redis-cluster:9121
+          - redis-cluster-2.redis-cluster:9121
+          - redis-cluster-3.redis-cluster:9121
+          - redis-cluster-4.redis-cluster:9121
+          - redis-cluster-5.redis-cluster:9121
+
+  # PostgreSQL
+  - job_name: 'postgresql'
+    static_configs:
+      - targets:
+          - postgres-exporter:9187
+
+  # NATS JetStream
+  - job_name: 'nats'
+    static_configs:
+      - targets:
+          - nats-exporter:7777
+
+  # Node Exporter
+  - job_name: 'node-exporter'
+    kubernetes_sd_configs:
+      - role: node
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(.*):10250'
+        replacement: '${1}:9100'
+        target_label: __address__
