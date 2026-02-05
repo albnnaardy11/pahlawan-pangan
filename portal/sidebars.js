@@ -2,15 +2,27 @@ import apiSidebar from './docs/api/sidebar';
 
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
-  // By default, Docusaurus generates a sidebar from the docs folder structure
   tutorialSidebar: [
     'intro',
     {
       type: 'category',
-      label: 'Core Documentation',
+      label: 'Architecture and Core',
       items: [
-        'tutorial-basics/create-a-document',
-        'tutorial-basics/congratulations',
+        'architecture/spatial-consistency',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Integration Guides',
+      items: [
+        'integration/pos-automation',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Security and Privacy',
+      items: [
+        'security/standards',
       ],
     },
     {

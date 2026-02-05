@@ -4,7 +4,7 @@ import styles from './styles.module.css';
 
 const FeatureList = [
   {
-    title: 'Pahlawan-Market 📉',
+    title: 'Pahlawan-Market',
     description: (
       <>
         Dynamic Pricing Engine using Exponential Decay. Prices drop automatically
@@ -13,7 +13,7 @@ const FeatureList = [
     ),
   },
   {
-    title: 'Pahlawan-AI 🧠',
+    title: 'Pahlawan-AI',
     description: (
       <>
         Predictive Analytics that forecasts food waste before it happens.
@@ -22,7 +22,7 @@ const FeatureList = [
     ),
   },
   {
-    title: 'Pahlawan-Express 🚚',
+    title: 'Pahlawan-Express',
     description: (
       <>
         Native logistics integration for sub-second courier matching.
