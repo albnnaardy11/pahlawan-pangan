@@ -44,7 +44,7 @@ Solve the "Last Mile Logistics" of food surplus distribution at a scale of **10M
 
 ```bash
 # Clone repository
-git clone https://github.com/antigravity/pahlawan-pangan
+git clone https://github.com/albnnaardy11/pahlawan-pangan
 cd pahlawan-pangan
 
 # Install dependencies

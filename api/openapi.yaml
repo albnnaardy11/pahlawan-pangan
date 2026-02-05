@@ -1,0 +1,118 @@
+openapi: 3.0.0
+info:
+  title: Pahlawan Pangan Public API
+  description: API Platform untuk Penyelamatan Makanan Surplus Skala Nasional Indonesia.
+  version: 2.0.0
+  contact:
+    name: Engineering Team Pahlawan Pangan
+    email: engineering@pahlawanpangan.org
+
+servers:
+  - url: https://api.pahlawanpangan.org/api/v1
+    description: Production Server
+  - url: http://localhost:8080/api/v1
+    description: Local Development
+
+paths:
+  /marketplace:
+    get:
+      summary: Cari Makanan Murah (B2C)
+      description: Mendapatkan daftar makanan surplus di sekitar lokasi pengguna dengan harga diskon dinamis.
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: lon
+          in: query
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Daftar makanan ditemukan
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SurplusItem'
+
+  /surplus:
+    post:
+      summary: Posting Makanan Surplus (Provider Only)
+      description: Restoran atau Hotel memposting kelebihan makanan mereka.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostSurplusRequest'
+      responses:
+        '201':
+          description: Berhasil diposting
+
+  /express/request:
+    post:
+      summary: Request Kurir Penyelamat
+      description: Memanggil kurir Pahlawan-Express untuk mengambil makanan.
+      responses:
+        '200':
+          description: Kurir sedang dicari
+
+  /sustainability/carbon-report:
+    get:
+      summary: Laporan Dampak Karbon (B2B)
+      description: Mendapatkan sertifikasi dan statistik CO2 yang telah diselamatkan.
+      responses:
+        '200':
+          description: Data laporan berhasil diambil
+
+  /community/drop-points:
+    get:
+      summary: Cari Titik Drop Bersama (RT/RW)
+      description: Mencari lokasi drop ganjil (Pos Satpam/Rumah RT) terdekat untuk menekan ongkir.
+      responses:
+        '200':
+          description: Daftar titik drop ditemukan
+
+  /analytics/provider-roi:
+    get:
+      summary: Laporan Analitik Bisnis (ROI)
+      description: Laporan finansial dan dampak bagi pemilik usaha (Resto/Hotel).
+      responses:
+        '200':
+          description: Data ROI berhasil diambil
+
+components:
+  schemas:
+    SurplusItem:
+      type: object
+      properties:
+        id:
+          type: string
+        food_type:
+          type: string
+        original_price:
+          type: number
+        current_price:
+          type: number
+        expires_in:
+          type: number
+          description: Menit menuju kedaluwarsa
+
+    PostSurplusRequest:
+      type: object
+      properties:
+        provider_id:
+          type: string
+        food_type:
+          type: string
+        quantity_kgs:
+          type: number
+        original_price:
+          type: number
+        expiry_time:
+          type: string
+          format: date-time

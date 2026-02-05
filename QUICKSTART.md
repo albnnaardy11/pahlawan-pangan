@@ -12,7 +12,7 @@
 
 ### Step 1: Start Infrastructure
 ```bash
-cd c:\dev\food-waste
+cd c:\dev\pahlawan-pangan
 docker-compose up -d
 ```
 
@@ -34,8 +34,9 @@ go mod download
 # Set environment variable
 $env:DATABASE_URL="postgres://admin:secret123@localhost:5432/pahlawan?sslmode=disable"
 
-# Run migrations
+# Run migrations & seed data
 psql $env:DATABASE_URL -f db/schema.sql
+psql $env:DATABASE_URL -f db/seed_indonesia.sql
 ```
 
 ### Step 4: Start the Server

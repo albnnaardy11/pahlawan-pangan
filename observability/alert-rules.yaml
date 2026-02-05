@@ -1,5 +1,5 @@
 groups:
-  - name: pahlawan_pangan_alerts
+  - name: pahlawan-pangan_alerts
     interval: 30s
     rules:
       # High Claim Latency

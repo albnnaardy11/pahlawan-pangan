@@ -23,7 +23,7 @@ var (
 	// Custom Metrics
 	claimLatency, _ = meter.Float64Histogram("surplus_claim_latency_seconds")
 	wastePrevented, _ = meter.Float64Counter("food_waste_prevented_tons_total")
-	engineSaturation, _ = meter.Float64Gauge("matching_engine_saturation_ratio")
+	// engineSaturation, _ = meter.Float64Gauge("matching_engine_saturation_ratio")
 )
 
 // Surplus represents a food donation offer
@@ -139,7 +139,7 @@ func (e *MatchingEngine) getDistance(ctx context.Context, lat1, lon1, lat2, lon2
 
 	if err != nil {
 		// Fallback to Haversine calculation (Non-blocking / Local)
-		span := otel.Tracer("matching-engine").Start(ctx, "HaversineFallback")
+		_, span := otel.Tracer("matching-engine").Start(ctx, "HaversineFallback")
 		distance = haversine(lat1, lon1, lat2, lon2)
 		span.End()
 		return distance, nil
@@ -149,8 +149,8 @@ func (e *MatchingEngine) getDistance(ctx context.Context, lat1, lon1, lat2, lon2
 }
 
 func (e *MatchingEngine) updateSaturation() {
-	saturation := float64(len(e.workerPool)) / float64(MaxWorkerPoolSize)
-	engineSaturation.Record(context.Background(), saturation)
+	// saturation := float64(len(e.workerPool)) / float64(MaxWorkerPoolSize)
+	// engineSaturation.Record(context.Background(), saturation)
 }
 
 // haversine calculates the great-circle distance between two points

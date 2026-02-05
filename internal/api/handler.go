@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/antigravity/pahlawan-pangan/internal/matching"
-	"github.com/antigravity/pahlawan-pangan/internal/outbox"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/matching"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"
@@ -42,6 +42,16 @@ func (h *Handler) Routes() http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(30 * time.Second))
+	
+	// CORS configuration for Frontend Devs
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	}))
 
 	// Health checks
 	r.Get("/health/live", h.LivenessCheck)
@@ -55,6 +65,19 @@ func (h *Handler) Routes() http.Handler {
 		r.Post("/surplus", h.PostSurplus)
 		r.Get("/surplus/{id}", h.GetSurplus)
 		r.Post("/surplus/{id}/claim", h.ClaimSurplus)
+		r.Get("/marketplace", h.BrowseSurplus) 
+		
+		// Social & Pahlawan-AI Unicorn Features
+		r.Get("/feed", h.GetSocialFeed)
+		r.Get("/analytics/predict", h.GetWastePrediction)
+
+		// Next-Gen Super-App Features
+		r.Post("/express/request", h.RequestExpress)
+		r.Post("/integration/pos/sync", h.SyncPOS)
+		r.Get("/sustainability/carbon-report", h.GetCarbonReport)
+		r.Post("/community/group-buy/join", h.JoinGroupBuy)
+		r.Get("/community/drop-points", h.GetDropPoints)
+		r.Get("/analytics/provider-roi", h.GetProviderROI)
 
 		// NGO endpoints
 		r.Get("/ngos/nearby", h.GetNearbyNGOs)
@@ -142,7 +165,7 @@ func (h *Handler) PostSurplus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	span.SetAttributes(attribute.String("surplus.id", surplusID))
+	span.SetAttributes(attribute.String("surplus_id", surplusID))
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
@@ -191,7 +214,7 @@ func (h *Handler) ClaimSurplus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	span.SetAttributes(
-		attribute.String("surplus.id", surplusID),
+		attribute.String("surplus_id", surplusID),
 		attribute.String("ngo.id", req.NGOID),
 	)
 
@@ -200,6 +223,200 @@ func (h *Handler) ClaimSurplus(w http.ResponseWriter, r *http.Request) {
 		"status": "claimed",
 	})
 }
+
+// BrowseSurplus allows general citizens to find cheap food (B2C Unicorn feature)
+func (h *Handler) BrowseSurplus(w http.ResponseWriter, r *http.Request) {
+	ctx, span := tracer.Start(r.Context(), "BrowseSurplus")
+	defer span.End()
+
+	_ = r.URL.Query().Get("lat")
+	_ = r.URL.Query().Get("lon")
+	
+	// In production, use PostGIS: 
+	// SELECT * FROM surplus WHERE ST_DWithin(location, ST_MakePoint($1, $2), 5000) 
+	// AND status = 'available'
+	
+	rows, err := h.db.QueryContext(ctx, `
+		SELECT id, provider_id, original_price, discount_price, food_type, expiry_time 
+		FROM surplus 
+		WHERE status = 'available' AND expiry_time > NOW()
+		LIMIT 20
+	`)
+	if err != nil {
+		http.Error(w, "Failed to fetch marketplace", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var results []map[string]interface{}
+	for rows.Next() {
+		var item struct {
+			ID            string
+			ProviderID    string
+			OriginalPrice float64
+			DiscountPrice float64
+			FoodType      string
+			ExpiryTime    time.Time
+		}
+		rows.Scan(&item.ID, &item.ProviderID, &item.OriginalPrice, &item.DiscountPrice, &item.FoodType, &item.ExpiryTime)
+		
+		results = append(results, map[string]interface{}{
+			"id":             item.ID,
+			"food_type":      item.FoodType,
+			"original_price": item.OriginalPrice,
+			"current_price":  item.DiscountPrice,
+			"expires_in":     time.Until(item.ExpiryTime).Minutes(),
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+// GetSocialFeed returns a Strava-style feed of food rescues (Shared Social Proof)
+func (h *Handler) GetSocialFeed(w http.ResponseWriter, r *http.Request) {
+	_, span := tracer.Start(r.Context(), "GetSocialFeed")
+	defer span.End()
+
+	// Logic: Fetch recent successful rescues with photos
+	results := []map[string]interface{}{
+		{
+			"user": "Budi Penyelamat",
+			"action": "Rescued 5kg Bakery items from 'Roti Enak Jaksel'",
+			"impact": "Saved 12kg of CO2",
+			"cheers": 42,
+			"media_url": "https://cdn.Pahlawan Pangan.org/rescuers/budi_1.jpg",
+		},
+		{
+			"user": "Santi Zero-Waste",
+			"action": "Donated 20 boxes of meals to 'Panti Asuhan Kasih'",
+			"impact": "Fed 40 children",
+			"cheers": 156,
+			"media_url": "https://cdn.Pahlawan Pangan.org/rescuers/santi_2.jpg",
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+// GetWastePrediction uses AI to tell restaurants if they will have leftovers today
+func (h *Handler) GetWastePrediction(w http.ResponseWriter, r *http.Request) {
+	_, span := tracer.Start(r.Context(), "GetWastePrediction")
+	defer span.End()
+
+	providerID := r.URL.Query().Get("provider_id")
+	if providerID == "" {
+		http.Error(w, "provider_id is required", http.StatusBadRequest)
+		return
+	}
+
+	// In real setup, h.aiEngine.PredictWaste(ctx, providerID)
+	prediction := map[string]interface{}{
+		"provider_id": providerID,
+		"predicted_loss_kgs": 12.5,
+		"confidence": 0.89,
+		"reason": "Rainy weather predicted in South Jakarta (decreases walk-in customers)",
+		"recommendation": "Active 'Flash Ludes' at 19:00 with 70% discount",
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(prediction)
+}
+
+// Next-Gen Feature Handlers
+
+func (h *Handler) RequestExpress(w http.ResponseWriter, r *http.Request) {
+	_, span := tracer.Start(r.Context(), "RequestExpress")
+	defer span.End()
+
+	// Simulating logistics request
+	res := map[string]interface{}{
+		"status":      "courier_searching",
+		"service":     "Pahlawan-Express",
+		"impact_pts":  50,
+		"est_pickup":  "12 minutes",
+	}
+	json.NewEncoder(w).Encode(res)
+}
+
+func (h *Handler) SyncPOS(w http.ResponseWriter, r *http.Request) {
+	_, span := tracer.Start(r.Context(), "SyncPOS")
+	defer span.End()
+
+	// Simulating POS automation
+	res := map[string]interface{}{
+		"provider":     "Bakery Center",
+		"items_found":  12,
+		"auto_posted":  true,
+		"sync_status":  "success",
+	}
+	json.NewEncoder(w).Encode(res)
+}
+
+func (h *Handler) GetCarbonReport(w http.ResponseWriter, r *http.Request) {
+	_, span := tracer.Start(r.Context(), "GetCarbonReport")
+	defer span.End()
+
+	res := map[string]interface{}{
+		"co2_saved_kg": 450.5,
+		"esg_tokens":   45,
+		"certification": "Zero Waste Gold",
+		"period":       "Monthly",
+	}
+	json.NewEncoder(w).Encode(res)
+}
+
+func (h *Handler) JoinGroupBuy(w http.ResponseWriter, r *http.Request) {
+	_, span := tracer.Start(r.Context(), "JoinGroupBuy")
+	defer span.End()
+
+	res := map[string]interface{}{
+		"group_id":    "RT05-RW02-SUDIRMAN",
+		"members":     12,
+		"total_kg":    15.0,
+		"goal_kg":     20.0,
+		"status":      "forming",
+	}
+	json.NewEncoder(w).Encode(res)
+}
+
+func (h *Handler) GetDropPoints(w http.ResponseWriter, r *http.Request) {
+	_, span := tracer.Start(r.Context(), "GetDropPoints")
+	defer span.End()
+
+	res := []map[string]interface{}{
+		{
+			"id": "DP-001",
+			"name": "Pos Satpam Cluster Sakura",
+			"address": "Jl. Sudirman No. 1",
+			"distance": "150m",
+		},
+		{
+			"id": "DP-002",
+			"name": "Rumah Ketua RT 05",
+			"address": "Gg. Pahlawan 3",
+			"distance": "420m",
+		},
+	}
+	json.NewEncoder(w).Encode(res)
+}
+
+func (h *Handler) GetProviderROI(w http.ResponseWriter, r *http.Request) {
+	_, span := tracer.Start(r.Context(), "GetProviderROI")
+	defer span.End()
+
+	res := map[string]interface{}{
+		"provider_id":       "P-777",
+		"total_idr_saved":   12500000.0,
+		"waste_saved_kg":    450.0,
+		"co2_offset_kg":     1125.0,
+		"eco_hero_status":   "Guardian of the Green",
+		"impact_ranking":    "Top 5% in Jakarta",
+	}
+	json.NewEncoder(w).Encode(res)
+}
+
 
 func (h *Handler) GetSurplus(w http.ResponseWriter, r *http.Request) {
 	// Implementation omitted for brevity

@@ -2,12 +2,12 @@
 
 ## 1. System Overview
 
-**Pahlawan Pangan** is a real-time food surplus redistribution platform designed to operate at global scale (10M+ transactions/day) with sub-second latency.
+**Pahlawan Pangan** is a real-time food surplus redistribution platform designed to operate at Indonesia-wide scale (10M+ transactions/day) with sub-second latency across all 38 provinces.
 
 ### 1.1 Problem Statement
-- **Food Waste**: 1.3 billion tons/year globally
-- **Hunger**: 828 million people undernourished
-- **Last Mile Challenge**: Logistics gap between surplus and need
+- **Food Waste (Indonesia)**: 23-48 million tons per year (Source: Bappenas)
+- **Hunger**: Indonesia ranks 77th on the Global Hunger Index
+- **Archipelago Logistics**: Unique challenges in redistributing food across 17,000+ islands
 
 ### 1.2 Solution
 Real-time matching engine connecting:
@@ -358,7 +358,19 @@ data, err := json.Marshal(event)
 
 ---
 
-### 2.5 Infrastructure & Global Scale
+### 2.6 Unicorn-Level Features (Next-Gen)
+
+#### Dynamic Pricing Engine (Pahlawan-Market)
+To ensure 100% "Ludes" (Zero Waste), we implement **Exponential Decay Pricing**:
+- **Algorithm**: `Price = Original * e^(-k * t)`
+- **Goal**: Price drops rapidly in the last 2 hours.
+- **Benefit**: Affordable premium food for low-income citizens.
+
+#### Gamification & Social Impact (Pahlawan-Impact)
+Using the **Strava Model**, we turn food saving into a competitive sport:
+- **Impact Points**: Reward providers for frequency, quantity, and speed.
+- **Achievements**: "The Hunger Crusher", "Speedy Saver", "Zero Waste Legend".
+- **National Leaderboard**: Public ranking of cities, restaurants, and individuals.
 
 #### Kubernetes HPA with Custom Metrics
 
@@ -453,7 +465,7 @@ CREATE INDEX idx_surplus_warm ON surplus_202601 (status) WHERE status != 'comple
 -- Cold data (90+ days): S3 via FDW
 CREATE FOREIGN TABLE surplus_2025 (...)
 SERVER s3_server
-OPTIONS (filename 's3://pahlawan/surplus_2025.parquet');
+OPTIONS (filename 's3://pahlawan-pangan/surplus_2025.parquet');
 ```
 
 ---
@@ -672,5 +684,7 @@ contract FoodDonation {
 ✅ $0.0001 cost per transaction  
 ✅ Full observability with OpenTelemetry  
 ✅ Anti-fragile design with fallbacks  
+✅ **Dynamic Pricing Engine** (B2C Market)  
+✅ **National Leaderboard** (Gamification)  
 
 **Impact**: Save 1M tons of food annually, feeding 10M+ people globally.

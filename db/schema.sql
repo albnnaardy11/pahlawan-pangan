@@ -64,6 +64,10 @@ CREATE TABLE surplus (
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
     version INT DEFAULT 1, -- Optimistic locking
+    original_price DECIMAL(10, 2), -- For B2C market
+    discount_price DECIMAL(10, 2), -- Calculated dynamically
+    is_donation BOOLEAN DEFAULT TRUE,
+    impact_points INT DEFAULT 0, -- Gamification for providers
     PRIMARY KEY (id, created_at, geo_region_id)
 ) PARTITION BY RANGE (created_at);
 
@@ -132,6 +136,144 @@ CREATE TABLE dlq_events (
     resolved BOOLEAN DEFAULT FALSE,
     resolved_at TIMESTAMP
 );
+
+-- Gamification: User Profiles (Consumers/People)
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255),
+    email VARCHAR(255) UNIQUE,
+    total_impact_points INT DEFAULT 0,
+    food_saved_count INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Leaderboard cache
+CREATE TABLE leaderboards (
+    region_id INT REFERENCES geo_regions(id),
+    entity_id UUID, -- Can be Provider or User
+    entity_name VARCHAR(255),
+    entity_type VARCHAR(20), -- 'provider', 'user'
+    rank INT,
+    points INT,
+    updated_at TIMESTAMP DEFAULT NOW(),
+    PRIMARY KEY (region_id, entity_id)
+);
+
+-- Social Impact Feed (Unicorn Feature)
+CREATE TABLE social_feed (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id),
+    provider_id UUID REFERENCES providers(id),
+    surplus_id UUID,
+    content_type VARCHAR(20), -- 'rescue_success', 'milestone', 'donation'
+    media_url TEXT, -- Shared photo of the food rescue
+    caption TEXT,
+    likes_count INT DEFAULT 0,
+    cheers_count INT DEFAULT 0, -- Like Strava 'Kudos'
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- B2B: Subscription & Zero Waste Certification
+CREATE TABLE business_subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    provider_id UUID REFERENCES providers(id),
+    plan_type VARCHAR(50), -- 'standard', 'premium', 'zero_waste_pro'
+    status VARCHAR(20),
+    next_billing_at TIMESTAMP,
+    features JSONB -- e.g., {"priority_matching": true, "tax_report": true}
+);
+
+-- AI/Analytics: Waste Prediction Models
+CREATE TABLE waste_predictions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    provider_id UUID REFERENCES providers(id),
+    predicted_date DATE,
+    predicted_quantity_kgs DECIMAL(10, 2),
+    confidence_score DECIMAL(5, 2),
+    context JSONB, -- e.g., {"event": "hujan_deras", "holiday": false}
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_social_user ON social_feed(user_id, created_at);
+CREATE INDEX idx_predictions_provider ON waste_predictions(provider_id, predicted_date);
+
+-- Pahlawan-Express: Logistics & Delivery
+CREATE TABLE deliveries (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    surplus_id UUID,
+    courier_id UUID, -- References a courier entity
+    status VARCHAR(20), -- 'searching', 'assigned', 'picked_up', 'delivered', 'failed'
+    fee DECIMAL(10, 2),
+    courier_points INT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Pahlawan-Connect: POS Integration
+CREATE TABLE pos_integrations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    provider_id UUID REFERENCES providers(id),
+    integration_type VARCHAR(50), -- 'moka', 'majoo', 'esensi'
+    api_key_encrypted BYTEA,
+    last_sync_at TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+-- Pahlawan-Carbon: ESG & Carbon Credits
+CREATE TABLE carbon_credits (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    provider_id UUID REFERENCES providers(id),
+    total_co2_saved_kg DECIMAL(15, 2),
+    credit_tokens BIGINT, -- 1 token per 100kg CO2 saved
+    last_issued_at TIMESTAMP,
+    is_certified BOOLEAN DEFAULT FALSE
+);
+
+-- Pahlawan-Comm: Community Group Buy
+CREATE TABLE community_groups (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    region_id INT REFERENCES geo_regions(id),
+    group_name VARCHAR(100),
+    coordinator_user_id UUID REFERENCES users(id),
+    total_members INT DEFAULT 1,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE group_buy_orders (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    group_id UUID REFERENCES community_groups(id),
+    surplus_id UUID,
+    total_quantity_kgs DECIMAL(10, 2),
+    status VARCHAR(20) DEFAULT 'forming', -- 'forming', 'locked', 'completed'
+    expires_at TIMESTAMP
+);
+
+CREATE INDEX idx_deliveries_surplus ON deliveries(surplus_id);
+CREATE INDEX idx_carbon_provider ON carbon_credits(provider_id);
+CREATE INDEX idx_comm_region ON community_groups(region_id);
+
+-- Pahlawan-Comm: Community Drop Points (RT/RW Hubs)
+CREATE TABLE community_drop_points (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    region_id INT REFERENCES geo_regions(id),
+    name VARCHAR(100), -- e.g., 'Pos Satpam Cluster A', 'Rumah Ketua RT 05'
+    address TEXT,
+    geometry GEOGRAPHY(POINT, 4326),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Analytics: Provider ROI & Sustainability Impact
+CREATE TABLE provider_analytics (
+    provider_id UUID REFERENCES providers(id),
+    total_revenue_saved DECIMAL(15, 2),
+    total_waste_prevented_kgs DECIMAL(10, 2),
+    carbon_offset_kg DECIMAL(10, 2),
+    last_updated TIMESTAMP DEFAULT NOW(),
+    PRIMARY KEY (provider_id)
+);
+
+CREATE INDEX idx_drop_points_geo ON community_drop_points USING GIST(geometry);
 
 CREATE INDEX idx_dlq_unresolved ON dlq_events(resolved, created_at) WHERE resolved = false;
 

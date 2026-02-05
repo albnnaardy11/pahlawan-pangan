@@ -1,4 +1,4 @@
-# Pahlawan Pangan: Hyper-Scale Food Surplus Platform
+# Pahlawan Pangan: Solusi Food Waste Skala Nasional (Seluruh Indonesia)
 ## Architectural Blueprint & Global Strategy
 
 ### 1. Distributed Spatial Consistency & The Matching Engine

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/antigravity/pahlawan-pangan/internal/outbox"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
 	"github.com/nats-io/nats.go"
 	"github.com/segmentio/encoding/json"
 	"go.opentelemetry.io/otel"

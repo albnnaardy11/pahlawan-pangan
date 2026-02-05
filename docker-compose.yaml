@@ -3,9 +3,9 @@ version: '3.8'
 services:
   postgres:
     image: postgis/postgis:15-3.3
-    container_name: pahlawan-postgres
+    container_name: pahlawan-pangan-postgres
     environment:
-      POSTGRES_DB: pahlawan
+      POSTGRES_DB: pahlawan-pangan
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: secret123
     ports:
@@ -21,7 +21,7 @@ services:
 
   redis:
     image: redis/redis-stack-server:latest
-    container_name: pahlawan-redis
+    container_name: pahlawan-pangan-redis
     ports:
       - "6379:6379"
     volumes:
@@ -30,7 +30,7 @@ services:
 
   nats:
     image: nats:latest
-    container_name: pahlawan-nats
+    container_name: pahlawan-pangan-nats
     ports:
       - "4222:4222"
       - "8222:8222"
@@ -38,7 +38,7 @@ services:
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
-    container_name: pahlawan-otel
+    container_name: pahlawan-pangan-otel
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
       - ./observability/otel-collector-config.yaml:/etc/otel-collector-config.yaml
@@ -50,7 +50,7 @@ services:
 
   jaeger:
     image: jaegertracing/all-in-one:latest
-    container_name: pahlawan-jaeger
+    container_name: pahlawan-pangan-jaeger
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
     ports:
@@ -59,7 +59,7 @@ services:
 
   prometheus:
     image: prom/prometheus:latest
-    container_name: pahlawan-prometheus
+    container_name: pahlawan-pangan-prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -74,7 +74,7 @@ services:
 
   grafana:
     image: grafana/grafana:latest
-    container_name: pahlawan-grafana
+    container_name: pahlawan-pangan-grafana
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_USERS_ALLOW_SIGN_UP: "false"
@@ -94,4 +94,4 @@ volumes:
 
 networks:
   default:
-    name: pahlawan-network
+    name: pahlawan-pangan-network
