@@ -47,7 +47,7 @@ func (s *PahlawanNextGen) CalculateCarbonImpact(kgs float64) CarbonReport {
 	// 1kg food waste = ~2.5 kg CO2 emission (Average)
 	co2 := kgs * 2.5
 	tokens := int64(co2 / 10.0) // 1 token per 10kg saved
-	
+
 	level := "Bronze"
 	if tokens > 100 {
 		level = "Gold"
@@ -99,28 +99,28 @@ func (s *PahlawanNextGen) GetNearbyDropPoints(ctx context.Context, lat, lon floa
 }
 
 type ProviderROI struct {
-	RevenueSaved  float64 `json:"revenue_saved_idr"`
+	RevenueSaved float64 `json:"revenue_saved_idr"`
 	WasteSavedKg float64 `json:"waste_saved_kg"`
-	CarbonCredit  int64   `json:"carbon_credits_earned"`
-	EarthStatus   string  `json:"earth_hero_status"`
+	CarbonCredit int64   `json:"carbon_credits_earned"`
+	EarthStatus  string  `json:"earth_hero_status"`
 }
 
 func (s *PahlawanNextGen) CalculateImpactROI(providerID string) ProviderROI {
 	// Simulated analytical calculation
 	return ProviderROI{
-		RevenueSaved:  12500000.0, // 12.5 Million IDR
+		RevenueSaved: 12500000.0, // 12.5 Million IDR
 		WasteSavedKg: 450.0,
-		CarbonCredit:  45,
-		EarthStatus:   "Guardian of the Green",
+		CarbonCredit: 45,
+		EarthStatus:  "Guardian of the Green",
 	}
 }
 
 // --- Real-World Safety & Cold-Chain (Addressing Project Weaknesses) ---
 
 type SafetyReport struct {
-	IsSafe          bool     `json:"is_safe"`
-	WarningMessage  string   `json:"warning_message,omitempty"`
-	SafetyWindowMin int      `json:"safety_window_remaining"`
+	IsSafe          bool   `json:"is_safe"`
+	WarningMessage  string `json:"warning_message,omitempty"`
+	SafetyWindowMin int    `json:"safety_window_remaining"`
 }
 
 func (s *PahlawanNextGen) ValidateFoodSafety(tempCategory string, timeSincePost time.Duration) SafetyReport {
@@ -145,10 +145,8 @@ func (s *PahlawanNextGen) AssignColdChainCourier(surplusID string, tempCategory 
 	if tempCategory == "ambient" {
 		return "standard_courier", nil
 	}
-	
+
 	// Logistics Logic: Only assign couriers with 'thermal_bag_verified'
 	fmt.Printf("Orchestrating Cold-Chain for %s (%s)\n", surplusID, tempCategory)
 	return "certified_cold_chain_courier", nil
 }
-
-

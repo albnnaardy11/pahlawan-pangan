@@ -43,7 +43,7 @@ func (h *Handler) Routes() http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(30 * time.Second))
-	
+
 	// CORS configuration for Frontend Devs
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
@@ -66,8 +66,8 @@ func (h *Handler) Routes() http.Handler {
 		r.Post("/surplus", h.PostSurplus)
 		r.Get("/surplus/{id}", h.GetSurplus)
 		r.Post("/surplus/{id}/claim", h.ClaimSurplus)
-		r.Get("/marketplace", h.BrowseSurplus) 
-		
+		r.Get("/marketplace", h.BrowseSurplus)
+
 		// Social & Pahlawan-AI Unicorn Features
 		r.Get("/feed", h.GetSocialFeed)
 		r.Get("/analytics/predict", h.GetWastePrediction)
@@ -192,7 +192,6 @@ func (h *Handler) ClaimSurplus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	var req ClaimSurplusRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -240,11 +239,11 @@ func (h *Handler) BrowseSurplus(w http.ResponseWriter, r *http.Request) {
 
 	_ = r.URL.Query().Get("lat")
 	_ = r.URL.Query().Get("lon")
-	
-	// In production, use PostGIS: 
-	// SELECT * FROM surplus WHERE ST_DWithin(location, ST_MakePoint($1, $2), 5000) 
+
+	// In production, use PostGIS:
+	// SELECT * FROM surplus WHERE ST_DWithin(location, ST_MakePoint($1, $2), 5000)
 	// AND status = 'available'
-	
+
 	rows, err := h.db.QueryContext(ctx, `
 		SELECT id, provider_id, original_price, discount_price, food_type, expiry_time, temperature_category 
 		FROM surplus 
@@ -268,7 +267,7 @@ func (h *Handler) BrowseSurplus(w http.ResponseWriter, r *http.Request) {
 			ExpiryTime    time.Time
 		}
 		rows.Scan(&item.ID, &item.ProviderID, &item.OriginalPrice, &item.DiscountPrice, &item.FoodType, &item.ExpiryTime)
-		
+
 		results = append(results, map[string]interface{}{
 			"id":             item.ID,
 			"food_type":      item.FoodType,
@@ -290,17 +289,17 @@ func (h *Handler) GetSocialFeed(w http.ResponseWriter, r *http.Request) {
 	// Logic: Fetch recent successful rescues with photos
 	results := []map[string]interface{}{
 		{
-			"user": "Budi Penyelamat",
-			"action": "Rescued 5kg Bakery items from 'Roti Enak Jaksel'",
-			"impact": "Saved 12kg of CO2",
-			"cheers": 42,
+			"user":      "Budi Penyelamat",
+			"action":    "Rescued 5kg Bakery items from 'Roti Enak Jaksel'",
+			"impact":    "Saved 12kg of CO2",
+			"cheers":    42,
 			"media_url": "https://cdn.Pahlawan Pangan.org/rescuers/budi_1.jpg",
 		},
 		{
-			"user": "Santi Zero-Waste",
-			"action": "Donated 20 boxes of meals to 'Panti Asuhan Kasih'",
-			"impact": "Fed 40 children",
-			"cheers": 156,
+			"user":      "Santi Zero-Waste",
+			"action":    "Donated 20 boxes of meals to 'Panti Asuhan Kasih'",
+			"impact":    "Fed 40 children",
+			"cheers":    156,
 			"media_url": "https://cdn.Pahlawan Pangan.org/rescuers/santi_2.jpg",
 		},
 	}
@@ -322,11 +321,11 @@ func (h *Handler) GetWastePrediction(w http.ResponseWriter, r *http.Request) {
 
 	// In real setup, h.aiEngine.PredictWaste(ctx, providerID)
 	prediction := map[string]interface{}{
-		"provider_id": providerID,
+		"provider_id":        providerID,
 		"predicted_loss_kgs": 12.5,
-		"confidence": 0.89,
-		"reason": "Rainy weather predicted in South Jakarta (decreases walk-in customers)",
-		"recommendation": "Active 'Flash Ludes' at 19:00 with 70% discount",
+		"confidence":         0.89,
+		"reason":             "Rainy weather predicted in South Jakarta (decreases walk-in customers)",
+		"recommendation":     "Active 'Flash Ludes' at 19:00 with 70% discount",
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -348,15 +347,14 @@ func (h *Handler) RequestExpress(w http.ResponseWriter, r *http.Request) {
 
 	// Simulating logistics request
 	res := map[string]interface{}{
-		"status":            "courier_searching",
-		"service":           "Pahlawan-Express",
+		"status":              "courier_searching",
+		"service":             "Pahlawan-Express",
 		"requires_cold_chain": requiresColdChain,
-		"impact_pts":        50,
-		"est_pickup":        "12 minutes",
+		"impact_pts":          50,
+		"est_pickup":          "12 minutes",
 	}
 	json.NewEncoder(w).Encode(res)
 }
-
 
 func (h *Handler) SyncPOS(w http.ResponseWriter, r *http.Request) {
 	_, span := tracer.Start(r.Context(), "SyncPOS")
@@ -364,10 +362,10 @@ func (h *Handler) SyncPOS(w http.ResponseWriter, r *http.Request) {
 
 	// Simulating POS automation
 	res := map[string]interface{}{
-		"provider":     "Bakery Center",
-		"items_found":  12,
-		"auto_posted":  true,
-		"sync_status":  "success",
+		"provider":    "Bakery Center",
+		"items_found": 12,
+		"auto_posted": true,
+		"sync_status": "success",
 	}
 	json.NewEncoder(w).Encode(res)
 }
@@ -377,10 +375,10 @@ func (h *Handler) GetCarbonReport(w http.ResponseWriter, r *http.Request) {
 	defer span.End()
 
 	res := map[string]interface{}{
-		"co2_saved_kg": 450.5,
-		"esg_tokens":   45,
+		"co2_saved_kg":  450.5,
+		"esg_tokens":    45,
 		"certification": "Zero Waste Gold",
-		"period":       "Monthly",
+		"period":        "Monthly",
 	}
 	json.NewEncoder(w).Encode(res)
 }
@@ -390,11 +388,11 @@ func (h *Handler) JoinGroupBuy(w http.ResponseWriter, r *http.Request) {
 	defer span.End()
 
 	res := map[string]interface{}{
-		"group_id":    "RT05-RW02-SUDIRMAN",
-		"members":     12,
-		"total_kg":    15.0,
-		"goal_kg":     20.0,
-		"status":      "forming",
+		"group_id": "RT05-RW02-SUDIRMAN",
+		"members":  12,
+		"total_kg": 15.0,
+		"goal_kg":  20.0,
+		"status":   "forming",
 	}
 	json.NewEncoder(w).Encode(res)
 }
@@ -405,15 +403,15 @@ func (h *Handler) GetDropPoints(w http.ResponseWriter, r *http.Request) {
 
 	res := []map[string]interface{}{
 		{
-			"id": "DP-001",
-			"name": "Pos Satpam Cluster Sakura",
-			"address": "Jl. Sudirman No. 1",
+			"id":       "DP-001",
+			"name":     "Pos Satpam Cluster Sakura",
+			"address":  "Jl. Sudirman No. 1",
 			"distance": "150m",
 		},
 		{
-			"id": "DP-002",
-			"name": "Rumah Ketua RT 05",
-			"address": "Gg. Pahlawan 3",
+			"id":       "DP-002",
+			"name":     "Rumah Ketua RT 05",
+			"address":  "Gg. Pahlawan 3",
 			"distance": "420m",
 		},
 	}
@@ -425,16 +423,15 @@ func (h *Handler) GetProviderROI(w http.ResponseWriter, r *http.Request) {
 	defer span.End()
 
 	res := map[string]interface{}{
-		"provider_id":       "P-777",
-		"total_idr_saved":   12500000.0,
-		"waste_saved_kg":    450.0,
-		"co2_offset_kg":     1125.0,
-		"eco_hero_status":   "Guardian of the Green",
-		"impact_ranking":    "Top 5% in Jakarta",
+		"provider_id":     "P-777",
+		"total_idr_saved": 12500000.0,
+		"waste_saved_kg":  450.0,
+		"co2_offset_kg":   1125.0,
+		"eco_hero_status": "Guardian of the Green",
+		"impact_ranking":  "Top 5% in Jakarta",
 	}
 	json.NewEncoder(w).Encode(res)
 }
-
 
 func (h *Handler) GetSurplus(w http.ResponseWriter, r *http.Request) {
 	// Implementation omitted for brevity

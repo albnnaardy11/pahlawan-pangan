@@ -22,7 +22,7 @@ func (s *NotificationService) Dispatch(ctx context.Context, surplusID, ngoID str
 
 	// Logic to send push notification
 	err := s.sendPush(ngoID, fmt.Sprintf("New surplus available: %s", surplusID))
-	
+
 	if err != nil {
 		// Resilience: Handle "NGO Offline" or Delivery Failure
 		// Instead of just failing, we trigger the DLQ/Rematch flow
@@ -45,7 +45,7 @@ func (s *NotificationService) handleDeliveryFailure(ctx context.Context, surplus
 	// Implementation: Insert into DLQ table or emit RematchRequired event
 	// This ensures the food is saved even if the primary recipient is down.
 	log.Printf("[DLQ] Surplus %s must be re-routed. Original NGO %s unreachable.", surplusID, ngoID)
-	
+
 	// In production, this would be a DB insert into outbox_events with EventType = RematchRequired
 	return nil
 }

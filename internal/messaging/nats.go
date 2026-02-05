@@ -31,11 +31,11 @@ func NewNATSPublisher(nc *nats.Conn) (*NATSPublisher, error) {
 		if err != nil {
 			// Create stream
 			_, err = js.AddStream(&nats.StreamConfig{
-				Name:     stream,
-				Subjects: []string{fmt.Sprintf("%s.*", stream)},
-				Storage:  nats.FileStorage,
+				Name:      stream,
+				Subjects:  []string{fmt.Sprintf("%s.*", stream)},
+				Storage:   nats.FileStorage,
 				Retention: nats.WorkQueuePolicy,
-				MaxAge:   24 * time.Hour,
+				MaxAge:    24 * time.Hour,
 			})
 			if err != nil {
 				return nil, err

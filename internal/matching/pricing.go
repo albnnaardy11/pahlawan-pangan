@@ -27,20 +27,20 @@ func (p *PricingEngine) CalculatePrice(originalPrice float64, postedAt, expiryAt
 
 	totalDuration := expiryAt.Sub(postedAt).Seconds()
 	elapsedDuration := now.Sub(postedAt).Seconds()
-	
+
 	if elapsedDuration <= 0 {
 		return originalPrice
 	}
 
 	// Progress from 0.0 to 1.0
 	progress := elapsedDuration / totalDuration
-	
+
 	// Exponential decay: faster price drop as we approach expiry
 	// At progress = 1.0, multiplier will be around 0.13
 	multiplier := math.Exp(-2.0 * progress)
-	
+
 	finalPrice := originalPrice * multiplier
-	
+
 	// Ensure it doesn't go below floor
 	floor := originalPrice * p.MinPriceRatio
 	if finalPrice < floor {
@@ -54,9 +54,9 @@ func (p *PricingEngine) CalculatePrice(originalPrice float64, postedAt, expiryAt
 func (p *PricingEngine) CalculateImpactPoints(quantityKgs float64, savedMinutesBeforeExpiry float64) int {
 	// Base points from quantity
 	base := int(quantityKgs * 10)
-	
+
 	// Bonus points for saving it early (Strava-style competition)
 	bonus := int(savedMinutesBeforeExpiry / 10)
-	
+
 	return base + bonus
 }

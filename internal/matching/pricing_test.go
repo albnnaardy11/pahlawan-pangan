@@ -15,7 +15,7 @@ func TestCalculatePrice(t *testing.T) {
 	// Progress = 0.5
 	// Multiplier = e^(-2 * 0.5) = e^-1 approx 0.36
 	price := engine.CalculatePrice(originalPrice, postedAt, expiryAt)
-	
+
 	if price <= 0 || price >= originalPrice {
 		t.Errorf("Price should be between 0 and original price, got %f", price)
 	}
@@ -28,7 +28,7 @@ func TestCalculatePrice(t *testing.T) {
 func TestImpactPoints(t *testing.T) {
 	engine := NewPricingEngine()
 	points := engine.CalculateImpactPoints(10.0, 60.0) // 10kg, 60 mins before expiry
-	
+
 	expected := 100 + 6 // 10*10 + 60/10
 	if points != expected {
 		t.Errorf("Expected %d points, got %d", expected, points)

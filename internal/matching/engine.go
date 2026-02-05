@@ -21,7 +21,7 @@ var (
 	meter  = otel.GetMeterProvider().Meter("matching-engine")
 
 	// Custom Metrics
-	claimLatency, _ = meter.Float64Histogram("surplus_claim_latency_seconds")
+	claimLatency, _   = meter.Float64Histogram("surplus_claim_latency_seconds")
 	wastePrevented, _ = meter.Float64Counter("food_waste_prevented_tons_total")
 	// engineSaturation, _ = meter.Float64Gauge("matching_engine_saturation_ratio")
 )
@@ -38,9 +38,9 @@ type Surplus struct {
 
 // NGO represents a receiving entity
 type NGO struct {
-	ID   string  `json:"id"`
-	Lat  float64 `json:"lat"`
-	Lon  float64 `json:"lon"`
+	ID  string  `json:"id"`
+	Lat float64 `json:"lat"`
+	Lon float64 `json:"lon"`
 }
 
 // Router interface for external routing engines
@@ -116,7 +116,7 @@ func (e *MatchingEngine) MatchNGO(ctx context.Context, surplus Surplus, candidat
 
 	// Update success metric
 	wastePrevented.Add(ctx, surplus.QuantityKgs/1000.0)
-	
+
 	return bestNGO, nil
 }
 

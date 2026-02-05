@@ -61,6 +61,21 @@ I've added features that most apps miss:
 - **Pahlawan-Comm**: Group buying for neighborhoods (RT/RW) to kill delivery
   fees.
 
+## 🚀 Version 2.0-Alpha: Security & Compliance Edition
+
+This isn't your average update. We've reinforced the system with:
+- **Digital Health Waivers**: Mandatory legal checks (X-Liability-Waiver) integrated into the API.
+- **Cold-Chain Orchestration**: Native support for chilled/frozen logistics with courier verification.
+- **Real-World AI Context**: Predicition models now ingest weather, local events, and holiday data.
+- **Cost Efficiency**: Scale-to-Zero strategies for regional deployments.
+
+## 📖 Professional Documentation
+
+If you want the full picture, go to our professional portal:
+[Pahlawan Pangan Documentation Portal](https://albnnaardy11.github.io/pahlawan-pangan/)
+
+It includes architecture deep dives, integration guides, and an **Interactive API Explorer**.
+
 ## Technical Specs (The real meat)
 
 - **Sharding**: S2 Geometry Level 13. High granularity, zero hotspots.

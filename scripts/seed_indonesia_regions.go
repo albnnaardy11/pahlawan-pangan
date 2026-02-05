@@ -45,7 +45,7 @@ func main() {
 	for i, city := range cities {
 		latlng := s2.LatLngFromDegrees(city.Lat, city.Lon)
 		cellID := s2.CellIDFromLatLng(latlng).Parent(13)
-		
+
 		// Create a small polygon (roughly 1km around the city center)
 		// For a real app, these would be city boundaries, but for a seed, a bbox is fine.
 		d := 0.01 // half-size in degrees
@@ -62,7 +62,7 @@ func main() {
 			comma = ";"
 		}
 
-		fmt.Printf("('%s', %d, ST_GeogFromText('%s'))%s\n", 
+		fmt.Printf("('%s', %d, ST_GeogFromText('%s'))%s\n",
 			city.Name, uint64(cellID), polygonWKT, comma)
 	}
 }

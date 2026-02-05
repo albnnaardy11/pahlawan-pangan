@@ -31,7 +31,7 @@ type SurplusRepository struct {
 // HandleRematchEvent processes a RematchRequired event
 func (w *RematchWorker) HandleRematchEvent(ctx context.Context, event outbox.OutboxEvent) error {
 	var payload struct {
-		SurplusID     string   `json:"surplus_id"`
+		SurplusID    string   `json:"surplus_id"`
 		ExcludedNGOs []string `json:"excluded_ngos"`
 	}
 

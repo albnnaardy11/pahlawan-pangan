@@ -13,8 +13,8 @@ type AIEngine struct {
 }
 
 type PredictionResult struct {
-	PredictedKgs    float64   `json:"predicted_kgs"`
-	Confidence      float64   `json:"confidence"`
+	PredictedKgs      float64 `json:"predicted_kgs"`
+	Confidence        float64 `json:"confidence"`
 	RecommendedAction string  `json:"recommended_action"`
 }
 
@@ -26,20 +26,20 @@ func NewAIEngine() *AIEngine {
 func (ai *AIEngine) PredictWaste(ctx context.Context, providerID string) (PredictionResult, error) {
 	// Simulating ML Inference
 	// Logic: If it's raining in Jakarta, restaurant footfall drops -> waste increases.
-	
+
 	rand.Seed(time.Now().UnixNano())
-	
+
 	predictedWaste := 5.0 + rand.Float64()*15.0 // Random 5-20kg for simulation
 	confidence := 0.75 + rand.Float64()*0.20
-	
+
 	action := "Normal Matching"
 	if predictedWaste > 15.0 {
 		action = "Pre-emptive Notification to NGOs"
 	}
 
 	return PredictionResult{
-		PredictedKgs:    math.Round(predictedWaste*100) / 100,
-		Confidence:      math.Round(confidence*100) / 100,
+		PredictedKgs:      math.Round(predictedWaste*100) / 100,
+		Confidence:        math.Round(confidence*100) / 100,
 		RecommendedAction: action,
 	}, nil
 }

@@ -22,7 +22,7 @@ func GetShardID(lat, lon float64) uint64 {
 func GetNearbyShards(lat, lon float64) []uint64 {
 	latlng := s2.LatLngFromDegrees(lat, lon)
 	cellID := s2.CellIDFromLatLng(latlng).Parent(DefaultShardLevel)
-	
+
 	neighbors := cellID.EdgeNeighbors()
 	ids := make([]uint64, len(neighbors)+1)
 	ids[0] = uint64(cellID)

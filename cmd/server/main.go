@@ -70,7 +70,7 @@ func main() {
 	}
 
 	outboxService := outbox.NewOutboxService(db)
-	
+
 	// Mock router for demonstration (replace with actual OSRM/Google Maps client)
 	router := &MockRouter{}
 	matchEngine := matching.NewMatchingEngine(router)
