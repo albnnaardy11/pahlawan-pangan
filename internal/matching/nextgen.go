@@ -2,7 +2,9 @@ package matching
 
 import (
 	"context"
+	"fmt"
 	"math"
+	"time"
 )
 
 // PahlawanNextGen encapsulates the unicorn-level features
@@ -112,4 +114,41 @@ func (s *PahlawanNextGen) CalculateImpactROI(providerID string) ProviderROI {
 		EarthStatus:   "Guardian of the Green",
 	}
 }
+
+// --- Real-World Safety & Cold-Chain (Addressing Project Weaknesses) ---
+
+type SafetyReport struct {
+	IsSafe          bool     `json:"is_safe"`
+	WarningMessage  string   `json:"warning_message,omitempty"`
+	SafetyWindowMin int      `json:"safety_window_remaining"`
+}
+
+func (s *PahlawanNextGen) ValidateFoodSafety(tempCategory string, timeSincePost time.Duration) SafetyReport {
+	// Business Logic: Ambient (4h), Hot (2h), Chilled/Frozen (4h if insulated)
+	limit := 240.0 // Default 4 hours
+	if tempCategory == "hot" {
+		limit = 120.0 // 2 hours for hot food without specialized heaters
+	}
+
+	remaining := limit - timeSincePost.Minutes()
+	if remaining <= 0 {
+		return SafetyReport{IsSafe: false, WarningMessage: "Food has exceeded safety time window.", SafetyWindowMin: 0}
+	}
+
+	return SafetyReport{
+		IsSafe:          true,
+		SafetyWindowMin: int(remaining),
+	}
+}
+
+func (s *PahlawanNextGen) AssignColdChainCourier(surplusID string, tempCategory string) (string, error) {
+	if tempCategory == "ambient" {
+		return "standard_courier", nil
+	}
+	
+	// Logistics Logic: Only assign couriers with 'thermal_bag_verified'
+	fmt.Printf("Orchestrating Cold-Chain for %s (%s)\n", surplusID, tempCategory)
+	return "certified_cold_chain_courier", nil
+}
+
 

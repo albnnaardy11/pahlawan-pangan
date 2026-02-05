@@ -10,6 +10,7 @@ import (
 	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/google/uuid"
 	"github.com/segmentio/encoding/json"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -184,6 +185,14 @@ func (h *Handler) ClaimSurplus(w http.ResponseWriter, r *http.Request) {
 
 	surplusID := chi.URLParam(r, "id")
 
+	// Weakness Fix: Check Liability Waiver
+	waiver := r.Header.Get("X-Liability-Waiver-Accepted")
+	if waiver != "true" {
+		http.Error(w, "Legal: You must accept the Food Safety Liability Waiver", http.StatusForbidden)
+		return
+	}
+
+
 	var req ClaimSurplusRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -237,7 +246,7 @@ func (h *Handler) BrowseSurplus(w http.ResponseWriter, r *http.Request) {
 	// AND status = 'available'
 	
 	rows, err := h.db.QueryContext(ctx, `
-		SELECT id, provider_id, original_price, discount_price, food_type, expiry_time 
+		SELECT id, provider_id, original_price, discount_price, food_type, expiry_time, temperature_category 
 		FROM surplus 
 		WHERE status = 'available' AND expiry_time > NOW()
 		LIMIT 20
@@ -330,15 +339,24 @@ func (h *Handler) RequestExpress(w http.ResponseWriter, r *http.Request) {
 	_, span := tracer.Start(r.Context(), "RequestExpress")
 	defer span.End()
 
+	// Weakness Fix: Check Cold Chain Requirement
+	temp := r.URL.Query().Get("temp")
+	requiresColdChain := false
+	if temp == "chilled" || temp == "frozen" || temp == "hot" {
+		requiresColdChain = true
+	}
+
 	// Simulating logistics request
 	res := map[string]interface{}{
-		"status":      "courier_searching",
-		"service":     "Pahlawan-Express",
-		"impact_pts":  50,
-		"est_pickup":  "12 minutes",
+		"status":            "courier_searching",
+		"service":           "Pahlawan-Express",
+		"requires_cold_chain": requiresColdChain,
+		"impact_pts":        50,
+		"est_pickup":        "12 minutes",
 	}
 	json.NewEncoder(w).Encode(res)
 }
+
 
 func (h *Handler) SyncPOS(w http.ResponseWriter, r *http.Request) {
 	_, span := tracer.Start(r.Context(), "SyncPOS")

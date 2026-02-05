@@ -68,6 +68,9 @@ CREATE TABLE surplus (
     discount_price DECIMAL(10, 2), -- Calculated dynamically
     is_donation BOOLEAN DEFAULT TRUE,
     impact_points INT DEFAULT 0, -- Gamification for providers
+    temperature_category VARCHAR(20) DEFAULT 'ambient', -- 'ambient', 'chilled', 'frozen', 'hot'
+    health_certificate_url TEXT,
+    safety_window_minutes INT DEFAULT 120, -- Default 2 hours safety window
     PRIMARY KEY (id, created_at, geo_region_id)
 ) PARTITION BY RANGE (created_at);
 
@@ -205,6 +208,8 @@ CREATE TABLE deliveries (
     status VARCHAR(20), -- 'searching', 'assigned', 'picked_up', 'delivered', 'failed'
     fee DECIMAL(10, 2),
     courier_points INT,
+    requires_cold_chain BOOLEAN DEFAULT FALSE,
+    thermal_bag_verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -274,6 +279,15 @@ CREATE TABLE provider_analytics (
 );
 
 CREATE INDEX idx_drop_points_geo ON community_drop_points USING GIST(geometry);
+
+-- Safety & Liability: Digital Agreements
+CREATE TABLE safety_liability_agreements (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    entity_id UUID NOT NULL, -- UserID or NGOID
+    agreement_version VARCHAR(20),
+    accepted_at TIMESTAMP DEFAULT NOW(),
+    ip_address VARCHAR(45)
+);
 
 CREATE INDEX idx_dlq_unresolved ON dlq_events(resolved, created_at) WHERE resolved = false;
 

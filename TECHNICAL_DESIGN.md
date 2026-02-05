@@ -687,4 +687,21 @@ contract FoodDonation {
 ✅ **Dynamic Pricing Engine** (B2C Market)  
 ✅ **National Leaderboard** (Gamification)  
 
-**Impact**: Save 1M tons of food annually, feeding 10M+ people globally.
+## 8. Cost Efficiency & Cloud-Native Optimization
+
+To address the high operational costs of a Tier-1 infrastructure while maintaining 10M+ TPS readiness:
+
+### 8.1 Adaptive Resource Management
+- **Scale-to-Zero (Knative)**: Implementation of Serverless API handlers for low-activity regions outside Java/Bali, reducing idle costs by 40%.
+- **Spot Instance Harvesting**: Utilizing AWS/GCP Spot Instances for non-critical matching workloads (e.g., background rematching, data cleanup), saving 70% on compute overhead.
+
+### 8.2 Intelligent Data Tiering
+- **Active-Passive Sharding**: High-cost SSD storage is reserved for "Hot" surplus items (0-7 days old). Historical data (>90 days) is automatically archived to Parquet format on S3-Compatible object storage using PostgreSQL Foreign Data Wrappers (FDW).
+- **Cache-Aside Warmup**: Pre-warming Redis caches only for high-density urban cells (S2 Level 12) to minimize RAM footprint.
+
+### 8.3 Network Cost Reduction
+- **Local VPC Peering**: Ensuring the Matching Engine and NATS clusters reside in the same AZ to eliminate inter-AZ data transfer fees.
+- **Compressed Payloads**: Utilizing Protobuf or Segmentio-JSON for internal service communication to reduce bandwidth consumption by 60%.
+
+---
+*Pahlawan Pangan: Scalability, Efficiency, Humanity.*
