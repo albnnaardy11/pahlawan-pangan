@@ -203,16 +203,30 @@ CREATE INDEX idx_predictions_provider ON waste_predictions(provider_id, predicte
 -- Pahlawan-Express: Logistics & Delivery
 CREATE TABLE deliveries (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    surplus_id UUID,
-    courier_id UUID, -- References a courier entity
-    status VARCHAR(20), -- 'searching', 'assigned', 'picked_up', 'delivered', 'failed'
+    surplus_id UUID NOT NULL,
+    courier_id UUID, -- NULL if self-pickup
+    status VARCHAR(20), -- 'searching', 'assigned', 'picked_up', 'delivered', 'failed', 'ready_for_pickup'
     fee DECIMAL(10, 2),
     courier_points INT,
     requires_cold_chain BOOLEAN DEFAULT FALSE,
     thermal_bag_verified BOOLEAN DEFAULT FALSE,
+    fulfillment_method VARCHAR(20) DEFAULT 'courier', -- 'courier', 'self_pickup'
+    pickup_verification_code VARCHAR(10), -- For self-pickup: QR/OTP
+    is_verified_pickup BOOLEAN DEFAULT FALSE,
+    external_tracking_id VARCHAR(255), -- Gojek/Grab Booking ID
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Self-Pickup Verification (Trust & Security)
+CREATE TABLE pickup_checkins (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    delivery_id UUID REFERENCES deliveries(id),
+    provider_id UUID REFERENCES providers(id),
+    checked_at TIMESTAMP DEFAULT NOW(),
+    location GEOGRAPHY(POINT, 4326) -- Validate user is actually at the store
+);
+
 
 -- Pahlawan-Connect: POS Integration
 CREATE TABLE pos_integrations (
@@ -277,6 +291,53 @@ CREATE TABLE provider_analytics (
     last_updated TIMESTAMP DEFAULT NOW(),
     PRIMARY KEY (provider_id)
 );
+
+-- Rating System: Trust & Safety (Standard Uber/Gojek)
+CREATE TABLE ratings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    entity_id UUID NOT NULL, -- ProviderID or CourierID
+    user_id UUID NOT NULL REFERENCES users(id),
+    score INT CHECK (score BETWEEN 1 AND 5),
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Voucher & Promo System (Standard Tokopedia)
+CREATE TABLE vouchers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code VARCHAR(20) UNIQUE NOT NULL,
+    discount_type VARCHAR(20), -- 'percentage', 'fixed_amount'
+    value DECIMAL(10, 2),
+    min_order_idr DECIMAL(10, 2),
+    max_discount_idr DECIMAL(10, 2),
+    starts_at TIMESTAMP,
+    expires_at TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+-- Chat & Communication (Meta-data for Threads)
+CREATE TABLE chat_threads (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    surplus_id UUID NOT NULL,
+    participant_a_id UUID NOT NULL, -- User/NGO
+    participant_b_id UUID NOT NULL, -- Provider/Courier
+    last_message TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- User/Provider Settings (Account Management)
+CREATE TABLE account_settings (
+    entity_id UUID PRIMARY KEY, -- User or Provider
+    preferences JSONB DEFAULT '{}', -- e.g., {"notif_enabled": true, "theme": "dark"}
+    security_verified BOOLEAN DEFAULT FALSE,
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_ratings_entity ON ratings(entity_id);
+CREATE INDEX idx_vouchers_code ON vouchers(code) WHERE is_active = true;
+CREATE INDEX idx_chat_surplus ON chat_threads(surplus_id);
+
 
 CREATE INDEX idx_drop_points_geo ON community_drop_points USING GIST(geometry);
 

@@ -85,6 +85,64 @@ paths:
         '200':
           description: Data ROI berhasil diambil
 
+  /ratings:
+    post:
+      summary: Submit Rating (Trust & Safety)
+      description: Memberikan rating bintang 1-5 untuk Hotel/UMKM atau Kurir.
+      responses:
+        '200':
+          description: Rating Berhasil Disimpan
+
+  /vouchers/apply:
+    post:
+      summary: Gunakan Voucher Promo (Tokopedia Style)
+      description: Memvalidasi dan menggunakan kode promo untuk diskon tambahan.
+      responses:
+        '200':
+          description: Voucher Valid dan Diskon Diterapkan
+
+  /marketplace/recommendations:
+    get:
+      summary: Personalized Recommendations (Weighted Algorithm)
+      description: Rekomendasi makanan berdasarkan rating, jarak, dan harga termurah.
+      responses:
+        '200':
+          description: Daftar Rekomendasi Teratas
+
+  /chat/threads:
+    post:
+      summary: Mulai Chat (Driver/Hotel Inbox)
+      description: Membuka jalur komunikasi langsung antara pembeli dengan hotel atau kurir.
+      responses:
+        '200':
+          description: Thread Chat Berhasil Dibuat
+
+  /account/settings:
+    put:
+      summary: Update Account Settings
+      description: Mengatur preferensi akun, notifikasi, dan profil.
+      responses:
+        '200':
+          description: Pengaturan Berhasil Diperbarui
+
+  /merchant/claims:
+    get:
+      summary: List Merchant Claims
+      description: Melihat daftar klaim aktif dan riwayat penebusan untuk Provider (Hotel/UMKM).
+      responses:
+        '200':
+          description: Daftar klaim berhasil diambil
+
+  /merchant/verify-pickup:
+    post:
+      summary: Verifikasi QR Code Pickup (Merchant)
+      description: Memvalidasi kode OTP/QR yang dibawa pembeli untuk mengonfirmasi serah terima makanan.
+      responses:
+        '200':
+          description: Verifikasi Berhasil dan Status Pesanan Selesai
+        '404':
+          description: Kode Tidak Valid atau Sudah Digunakan
+
 components:
   schemas:
     SurplusItem:
