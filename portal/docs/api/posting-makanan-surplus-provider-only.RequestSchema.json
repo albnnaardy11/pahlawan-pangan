@@ -1,0 +1,1 @@
+{"title":"Body","body":{"required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"provider_id":{"type":"string"},"food_type":{"type":"string"},"quantity_kgs":{"type":"number"},"original_price":{"type":"number"},"expiry_time":{"type":"string","format":"date-time"}},"title":"PostSurplusRequest"}}}}}
