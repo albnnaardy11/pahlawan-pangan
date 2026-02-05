@@ -1,0 +1,1 @@
+"use strict";(globalThis.webpackChunkportal=globalThis.webpackChunkportal||[]).push([[4878],{21681(a){a.exports=JSON.parse('{"metadata":{"permalink":"/pahlawan-pangan/blog","page":1,"postsPerPage":10,"totalPages":1,"totalCount":4,"blogDescription":"Blog","blogTitle":"Blog"}}')}}]);

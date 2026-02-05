@@ -1,0 +1,1 @@
+"use strict";(globalThis.webpackChunkportal=globalThis.webpackChunkportal||[]).push([[1903],{1912(a){a.exports=JSON.parse('{"blogBasePath":"/pahlawan-pangan/blog","blogTitle":"Blog","authorsListPath":"/pahlawan-pangan/blog/authors"}')}}]);
