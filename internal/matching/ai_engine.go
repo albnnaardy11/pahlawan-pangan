@@ -3,8 +3,7 @@ package matching
 import (
 	"context"
 	"math"
-	"math/rand"
-	"time"
+	"math/rand/v2"
 )
 
 // AI Engine for predictive food waste analytics
@@ -26,8 +25,6 @@ func NewAIEngine() *AIEngine {
 func (ai *AIEngine) PredictWaste(ctx context.Context, providerID string) (PredictionResult, error) {
 	// Simulating ML Inference
 	// Logic: If it's raining in Jakarta, restaurant footfall drops -> waste increases.
-
-	rand.Seed(time.Now().UnixNano())
 
 	predictedWaste := 5.0 + rand.Float64()*15.0 // Random 5-20kg for simulation
 	confidence := 0.75 + rand.Float64()*0.20

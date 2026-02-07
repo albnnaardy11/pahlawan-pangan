@@ -16,7 +16,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.24'
           cache: true
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
@@ -32,7 +32,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.24'
       - name: Run Gosec (Security Scan)
         run: |
           go install github.com/securego/gosec/v2/cmd/gosec@latest
@@ -52,7 +52,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.24'
       - name: Run Tests with Race Detector
         run: go test -v -race -coverprofile=coverage.out ./...
       - name: Check Coverage
@@ -69,7 +69,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.24'
       - name: Run Benchmarks
         run: go test -bench=. -benchmem ./...
 
@@ -83,7 +83,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.24'
       - name: Build Optimized Binary
         run: |
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \

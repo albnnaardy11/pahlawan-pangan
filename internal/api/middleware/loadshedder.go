@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -31,7 +31,7 @@ func (ls *AdaptiveLoadShedder) Handle(next http.Handler) http.Handler {
 
 		if shedding {
 			w.WriteHeader(http.StatusServiceUnavailable)
-			w.Write([]byte("⚠️  [SRE-LOAD-SHEDDING] System is under heavy load. Request rejected to maintain stability."))
+			_, _ = w.Write([]byte("⚠️  [SRE-LOAD-SHEDDING] System is under heavy load. Request rejected to maintain stability."))
 			return
 		}
 
@@ -55,12 +55,12 @@ func (ls *AdaptiveLoadShedder) recordLatency(d time.Duration) {
 		avg := ls.latencySum / time.Duration(ls.requestCount)
 		if avg > ls.threshold {
 			if !ls.isShedding {
-				fmt.Printf("🚨 [SRE-ALERT] Latency (%.2fms) exceeded threshold (%v). SHEDDING LOAD START.\n", float64(avg.Milliseconds()), ls.threshold)
+				log.Printf("🚨 [SRE-ALERT] Latency (%.2fms) exceeded threshold (%v). SHEDDING LOAD START.\n", float64(avg.Milliseconds()), ls.threshold)
 			}
 			ls.isShedding = true
 		} else {
 			if ls.isShedding {
-				fmt.Printf("✅ [SRE-INFO] Latency (%.2fms) recovered. SHEDDING LOAD STOP.\n", float64(avg.Milliseconds()))
+				log.Printf("✅ [SRE-INFO] Latency (%.2fms) recovered. SHEDDING LOAD STOP.\n", float64(avg.Milliseconds()))
 			}
 			ls.isShedding = false
 		}

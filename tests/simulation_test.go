@@ -3,7 +3,7 @@ package tests
 import (
 	"context"
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -12,10 +12,10 @@ import (
 	"github.com/albnnaardy11/pahlawan-pangan/internal/matching"
 )
 
-// MockRouter simulates a routing service
-type MockRouter struct{}
+// ScaleSimulationMockRouter simulates a routing service
+type ScaleSimulationMockRouter struct{}
 
-func (m *MockRouter) GetTravelTime(ctx context.Context, startLat, startLon, endLat, endLon float64) (time.Duration, error) {
+func (m *ScaleSimulationMockRouter) GetTravelTime(ctx context.Context, startLat, startLon, endLat, endLon float64) (time.Duration, error) {
 	// Simulate network latency (50-200ms)
 	latency := time.Duration(50+rand.Intn(150)) * time.Millisecond
 	select {
@@ -28,7 +28,7 @@ func (m *MockRouter) GetTravelTime(ctx context.Context, startLat, startLon, endL
 
 func TestScaleSimulation(t *testing.T) {
 	// Setup
-	router := &MockRouter{}
+	router := &ScaleSimulationMockRouter{}
 	engine := matching.NewMatchingEngine(router)
 
 	// Simulation Parameters

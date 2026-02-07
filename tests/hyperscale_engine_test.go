@@ -11,9 +11,9 @@ import (
 	"github.com/albnnaardy11/pahlawan-pangan/internal/matching"
 )
 
-type MockRouter struct{}
+type HyperScaleMockRouter struct{}
 
-func (m *MockRouter) GetTravelTime(ctx context.Context, startLat, startLon, endLat, endLon float64) (time.Duration, error) {
+func (m *HyperScaleMockRouter) GetTravelTime(ctx context.Context, startLat, startLon, endLat, endLon float64) (time.Duration, error) {
 	// Simulate minor I/O latency
 	return 10 * time.Millisecond, nil
 }
@@ -28,7 +28,7 @@ func TestHyperScaleEngine(t *testing.T) {
 		CandidatesPerMatch = 20    // Number of NGOs per match
 	)
 
-	router := &MockRouter{}
+	router := &HyperScaleMockRouter{}
 	engine := matching.NewMatchingEngine(router)
 
 	surplus := matching.Surplus{

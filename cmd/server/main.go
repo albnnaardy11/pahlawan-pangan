@@ -68,7 +68,7 @@ func main() {
 	natsPublisher, _ := messaging.NewNATSPublisher(nc)
 
 	// 5. Dependency Injection (Layered Architecture)
-	repo := surplusRepo.NewSurplusRepository(db)
+	repo := surplusRepo.NewSurplusRepository(db, db)
 	
 	router := &MockRouter{} // Legacy or mock for now
 	matchEngine := matching.NewMatchingEngine(router)

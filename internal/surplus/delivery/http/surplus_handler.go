@@ -46,7 +46,7 @@ func (h *SurplusHandler) PostSurplus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(item)
+	_ = json.NewEncoder(w).Encode(item)
 }
 
 func (h *SurplusHandler) GetMarketplace(w http.ResponseWriter, r *http.Request) {
@@ -56,5 +56,5 @@ func (h *SurplusHandler) GetMarketplace(w http.ResponseWriter, r *http.Request) 
 func (h *SurplusHandler) respondWithError(w http.ResponseWriter, err *errors.AppError) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(err.StatusCode)
-	json.NewEncoder(w).Encode(err)
+	_ = json.NewEncoder(w).Encode(err)
 }

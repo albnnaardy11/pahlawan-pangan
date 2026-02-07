@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"math/rand"
+	"math/rand/v2"
 	"net/http"
 )
 
