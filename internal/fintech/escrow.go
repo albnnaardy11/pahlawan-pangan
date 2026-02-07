@@ -40,3 +40,9 @@ func (s *EscrowService) ReleaseFunds(ctx context.Context, paymentID string, prov
 	fmt.Printf("💰 [FINTECH] Delivery Verified! Releasing funds to Provider %s (Payment ID: %s)\n", providerID, paymentID)
 	return nil
 }
+
+// RefundFunds returns money to the user in case of disputes or stale claims.
+func (s *EscrowService) RefundFunds(ctx context.Context, paymentID string, userID string) error {
+	fmt.Printf("⏪ [FINTECH] Dispute Approved! Refunding funds to User %s (Payment ID: %s)\n", userID, paymentID)
+	return nil
+}

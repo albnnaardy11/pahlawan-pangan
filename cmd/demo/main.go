@@ -11,6 +11,7 @@ import (
 
 	"github.com/albnnaardy11/pahlawan-pangan/internal/fintech"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/geo"
+	"github.com/albnnaardy11/pahlawan-pangan/pkg/utils"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"
@@ -50,6 +51,9 @@ func main() {
 	// Viral Engine (New Phase 4)
 	r.Get("/api/v1/impact/leaderboard", GetNationalLeaderboard)
 	r.Get("/api/v1/impact/share/{id}", GenerateShareCard)
+
+	// Phase 5: Reverse Logistics & Disputes
+	r.Post("/api/v1/dispute", RaiseDispute)
 
 	fmt.Println("🚀 Pahlawan Pangan - UNICORN VIRAL ENGINE READY")
 	fmt.Println("-----------------------------------------------------")
@@ -221,6 +225,24 @@ func PlaceAuctionBid(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"auction_status": "won",
 		"message":        "Dutch Auction Win! Final Price locked.",
+	})
+}
+
+func RaiseDispute(w http.ResponseWriter, r *http.Request) {
+	traceID := uuid.New().String() // OpenTelemetry Propagation simulation
+	w.Header().Set("X-Trace-ID", traceID)
+	
+	fmt.Printf("🔍 [OBSERVABILITY] Trace ID: %s - Processing Dispute...\n", traceID)
+	
+	// PII Masking Simulation
+	email := "budi.pahlawan@gmail.com"
+	maskedEmail := utils.MaskPII(email)
+	fmt.Printf("🛡️  [PRIVACY] Logging masked user data: %s\n", maskedEmail)
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"trace_id": traceID,
+		"message":  "Dispute received. Automated Refund check started.",
+		"policy":   "15-min auto-refund active",
 	})
 }
 

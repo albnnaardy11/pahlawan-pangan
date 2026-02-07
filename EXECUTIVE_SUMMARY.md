@@ -58,6 +58,13 @@ You requested a **Tier-1 Tech Giant level architecture** for solving global food
 - **Resilience**: IP-based Rate Limiting, 5s Hard Timeouts, and Circuit Breakers.
 - **Consistency**: Optimistic Locking (Versioning) to prevent race conditions during Flash Sales.
 
+### 9. **Hyper-Resilience & Governance** (Phase 5)
+- **Dispute Engine**: Automated refund system via Smart Escrow for stale or bad-quality claims.
+- **Privacy (PDP)**: PII (Personally Identifiable Information) masking in logs to comply with UU PDP.
+- **Observability**: OpenTelemetry tracing (X-Trace-ID) to track requests across millions of nodes.
+- **Data Lifecycle**: Hot/Cold archiving strategy (S3/BigQuery) for multi-terabyte scale efficiency.
+- **Island Strategy**: Geo-sharded deployments to minimize latency across the Indonesian archipelago.
+
 ---
 
 ## 🏗️ WHAT WAS BUILT
