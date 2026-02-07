@@ -29,7 +29,7 @@ func (u *disputeUsecase) RaiseDispute(ctx context.Context, dispute *domain.Dispu
 func (u *disputeUsecase) ResolveDispute(ctx context.Context, disputeID string, status string) error {
 	if status == "approved" {
 		// Logic: Identify payment ID from disputeID and trigger refund
-		u.escrowSvc.RefundFunds(ctx, "PAY-MOCK-123", "USER-MOCK-456")
+		_ = u.escrowSvc.RefundFunds(ctx, "PAY-MOCK-123", "USER-MOCK-456")
 	}
 	return nil
 }

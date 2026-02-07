@@ -35,7 +35,7 @@ func (h *DisputeHandler) RaiseDispute(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusAccepted)
-	json.NewEncoder(w).Encode(map[string]string{
+	_ = json.NewEncoder(w).Encode(map[string]string{
 		"message": "Dispute submitted. Our legal team and AI will review the freshness quality.",
 		"status":  "PENDING_REVIEW",
 	})

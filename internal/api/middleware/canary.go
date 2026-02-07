@@ -11,7 +11,7 @@ func CanarySplitter(canaryPercentage int, canaryHeader string) func(next http.Ha
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Probability check
-			if rand.Intn(100) < canaryPercentage {
+			if rand.IntN(100) < canaryPercentage {
 				w.Header().Set("X-Traffic-Type", "CANARY")
 				w.Header().Set("X-App-Version", canaryHeader)
 			} else {

@@ -112,7 +112,7 @@ func TestHardStressSimulation(t *testing.T) {
 					
 					// Random claim
 					if len(list) > 0 {
-						target := list[rand.Intn(len(list))]
+						target := list[rand.IntN(len(list))]
 						idVal := target["id"].(string)
 						cResp, cErr := client.Post(TargetURL+"/api/v1/surplus/"+idVal+"/claim", "application/json", nil)
 						if cErr == nil {

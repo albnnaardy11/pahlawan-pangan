@@ -63,8 +63,16 @@ func main() {
 	fmt.Println("-----------------------------------------------------")
 	fmt.Println("👉 Try: curl -X GET http://localhost:8080/api/v1/marketplace")
 
-	if err := http.ListenAndServe(":8080", r); err != nil {
-		log.Fatal(err)
+	// 8. Server Setup
+	srv := &http.Server{
+		Addr:              ":8080",
+		Handler:           r,
+		ReadHeaderTimeout: 5 * time.Second, // G112: Prevent Slowloris
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+	}
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("Server error: %v", err)
 	}
 }
 
@@ -98,7 +106,7 @@ func PostSurplus(w http.ResponseWriter, r *http.Request) {
 	s2ID := s2Engine.GetCellID(-6.2, 106.8) // Jakarta Cell
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"id":         item.ID,
 		"status":     "posted",
 		"geo_index":  fmt.Sprintf("S2-Cell-%d", s2ID), // Scalable Indexing
@@ -127,7 +135,7 @@ func ListSurplus(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	json.NewEncoder(w).Encode(items)
+	_ = json.NewEncoder(w).Encode(items)
 }
 
 func ClaimSurplus(w http.ResponseWriter, r *http.Request) {
@@ -151,13 +159,13 @@ func ClaimSurplus(w http.ResponseWriter, r *http.Request) {
 	surplusDB[id] = item
 
 	// Simulate Matching Latency
-	time.Sleep(time.Duration(rand.Intn(100)) * time.Millisecond)
+	time.Sleep(time.Duration(rand.IntN(100)) * time.Millisecond)
 
 	// Fintech Layer: Lock Funds
 	escrow := fintech.NewEscrowService()
 	payment, _ := escrow.LockFunds(r.Context(), "NGO-User-001", 25000.0)
 
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"status": "claimed",
 		"fulfillment": map[string]string{
 			"method": "courier",
@@ -174,7 +182,7 @@ func ClaimSurplus(w http.ResponseWriter, r *http.Request) {
 }
 
 func AnalyzeFoodImage(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"ai_model":          "Pahlawan-Vision-v3.0-Nutritionist-Pro",
 		"overall_freshness": "98.2%",
 		"nutrition": map[string]interface{}{
@@ -191,7 +199,7 @@ func AnalyzeFoodImage(w http.ResponseWriter, r *http.Request) {
 
 func VerifyBlockchainImpact(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"transaction_id": id,
 		"status":         "verified_on_ledger",
 		"chain":          "Pahlawan-Trust-Private",
@@ -201,7 +209,7 @@ func VerifyBlockchainImpact(w http.ResponseWriter, r *http.Request) {
 
 func GenerateShareCard(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"share_url": fmt.Sprintf("https://pahlawanpangan.org/v/card-%s.png", id),
 		"og_title":  "Saya baru saja menyelamatkan 2kg Makanan!",
 		"og_description": "Bergabunglah menjadi pahlawan dan cegah 5kg Emisi CO2 hari ini.",
@@ -210,7 +218,7 @@ func GenerateShareCard(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetNationalLeaderboard(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"top_cities": []map[string]interface{}{
 			{"city": "Bandung", "total_saved_kgs": 45021, "rank": 1},
 			{"city": "Jakarta", "total_saved_kgs": 43902, "rank": 2},
@@ -222,7 +230,7 @@ func GetNationalLeaderboard(w http.ResponseWriter, r *http.Request) {
 }
 
 func PlaceAuctionBid(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"auction_status": "won",
 		"message":        "Dutch Auction Win! Final Price locked.",
 	})
@@ -239,10 +247,9 @@ func RaiseDispute(w http.ResponseWriter, r *http.Request) {
 	maskedEmail := utils.MaskPII(email)
 	fmt.Printf("🛡️  [PRIVACY] Logging masked user data: %s\n", maskedEmail)
 
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"trace_id": traceID,
 		"message":  "Dispute received. Automated Refund check started.",
 		"policy":   "15-min auto-refund active",
 	})
 }
-

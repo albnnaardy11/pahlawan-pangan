@@ -17,7 +17,7 @@ type ScaleSimulationMockRouter struct{}
 
 func (m *ScaleSimulationMockRouter) GetTravelTime(ctx context.Context, startLat, startLon, endLat, endLon float64) (time.Duration, error) {
 	// Simulate network latency (50-200ms)
-	latency := time.Duration(50+rand.Intn(150)) * time.Millisecond
+	latency := time.Duration(50+rand.IntN(150)) * time.Millisecond
 	select {
 	case <-ctx.Done():
 		return 0, ctx.Err()

@@ -39,7 +39,7 @@ func (l *DistributedRateLimiter) Limit(next http.Handler) http.Handler {
 		if int(count) > l.limit {
 			w.Header().Set("X-RateLimit-Limit", string(rune(l.limit)))
 			w.WriteHeader(http.StatusTooManyRequests)
-			w.Write([]byte("🚫 [SRE-DISTRIBUTED] Rate limit exceeded. Try again in a few seconds."))
+			_, _ = w.Write([]byte("🚫 [SRE-DISTRIBUTED] Rate limit exceeded. Try again in a few seconds."))
 			return
 		}
 
@@ -61,7 +61,7 @@ func IdempotencyMiddleware(client *redis.Client) func(next http.Handler) http.Ha
 			set, err := client.SetNX(ctx, "idempotency:"+key, "processing", 1*time.Hour).Result()
 			if err != nil || !set {
 				w.WriteHeader(http.StatusConflict)
-				w.Write([]byte("⚠️ Request is already being processed or has been completed."))
+				_, _ = w.Write([]byte("⚠️ Request is already being processed or has been completed."))
 				return
 			}
 

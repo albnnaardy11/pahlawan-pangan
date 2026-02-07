@@ -206,7 +206,7 @@ func (h *Handler) PostSurplus(w http.ResponseWriter, r *http.Request) {
 	span.SetAttributes(attribute.String("surplus_id", surplusID))
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
+	_ = json.NewEncoder(w).Encode(map[string]string{
 		"surplus_id": surplusID,
 		"status":     "posted",
 	})
@@ -278,7 +278,7 @@ func (h *Handler) ClaimSurplus(w http.ResponseWriter, r *http.Request) {
 	`, surplusID, fStatus.Method, fStatus.VerificationCode, fStatus.TrackingID)
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":      "claimed",
 		"fulfillment": fStatus,
 	})
@@ -331,7 +331,7 @@ func (h *Handler) BrowseSurplus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(results)
+	_ = json.NewEncoder(w).Encode(results)
 }
 
 // GetSocialFeed returns a Strava-style feed of food rescues (Shared Social Proof)
@@ -358,7 +358,7 @@ func (h *Handler) GetSocialFeed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(results)
+	_ = json.NewEncoder(w).Encode(results)
 }
 
 // GetWastePrediction uses AI to tell restaurants if they will have leftovers today
@@ -406,7 +406,7 @@ func (h *Handler) RequestExpress(w http.ResponseWriter, r *http.Request) {
 		"impact_pts":          50,
 		"est_pickup":          "12 minutes",
 	}
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func (h *Handler) SyncPOS(w http.ResponseWriter, r *http.Request) {
@@ -420,7 +420,7 @@ func (h *Handler) SyncPOS(w http.ResponseWriter, r *http.Request) {
 		"auto_posted": true,
 		"sync_status": "success",
 	}
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func (h *Handler) GetCarbonReport(w http.ResponseWriter, r *http.Request) {
@@ -433,7 +433,7 @@ func (h *Handler) GetCarbonReport(w http.ResponseWriter, r *http.Request) {
 		"certification": "Zero Waste Gold",
 		"period":        "Monthly",
 	}
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func (h *Handler) JoinGroupBuy(w http.ResponseWriter, r *http.Request) {
@@ -447,7 +447,7 @@ func (h *Handler) JoinGroupBuy(w http.ResponseWriter, r *http.Request) {
 		"goal_kg":  20.0,
 		"status":   "forming",
 	}
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func (h *Handler) GetDropPoints(w http.ResponseWriter, r *http.Request) {
@@ -468,7 +468,7 @@ func (h *Handler) GetDropPoints(w http.ResponseWriter, r *http.Request) {
 			"distance": "420m",
 		},
 	}
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func (h *Handler) GetProviderROI(w http.ResponseWriter, r *http.Request) {
@@ -483,7 +483,7 @@ func (h *Handler) GetProviderROI(w http.ResponseWriter, r *http.Request) {
 		"eco_hero_status": "Guardian of the Green",
 		"impact_ranking":  "Top 5% in Jakarta",
 	}
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func (h *Handler) GetSurplus(w http.ResponseWriter, r *http.Request) {
@@ -638,7 +638,7 @@ func (h *Handler) AnalyzeFoodImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 
@@ -665,7 +665,7 @@ func (h *Handler) VerifyBlockchainImpact(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 // PlaceAuctionBid (Pahlawan-Auction) - Flash Ludes Dutch Auction
@@ -693,7 +693,7 @@ func (h *Handler) PlaceAuctionBid(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 
