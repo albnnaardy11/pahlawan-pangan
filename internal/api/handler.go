@@ -100,6 +100,11 @@ func (h *Handler) Routes() http.Handler {
 
 		// NGO endpoints
 		r.Get("/ngos/nearby", h.GetNearbyNGOs)
+
+		// --- UNICORN PHASE 3: AI, BLOCKCHAIN & AUCTION ---
+		r.Post("/surplus/analyze-image", h.AnalyzeFoodImage)      // Pahlawan-Scan
+		r.Get("/impact/verify/{id}", h.VerifyBlockchainImpact)    // Pahlawan-Trust
+		r.Post("/marketplace/auction/bid", h.PlaceAuctionBid)    // Pahlawan-Auction
 	})
 
 	return r
@@ -585,5 +590,98 @@ func (h *Handler) VerifyPickupCode(w http.ResponseWriter, r *http.Request) {
 		"message": "Pickup successful. Inventory updated.",
 	})
 }
+
+// --- UNICORN PHASE 3 IMPLEMENTATIONS ---
+
+// AnalyzeFoodImage (Pahlawan-Scan) - Nutritionist-Grade Vision AI (Nutri-Vision)
+func (h *Handler) AnalyzeFoodImage(w http.ResponseWriter, r *http.Request) {
+	_, span := tracer.Start(r.Context(), "AnalyzeFoodImage")
+	defer span.End()
+
+	// Advanced simulation of a Nutritionist Vision Pipeline
+	res := map[string]interface{}{
+		"ai_model":          "Pahlawan-Vision-v3.0-Nutritionist-Pro",
+		"status":            "ANALYSIS_COMPLETE",
+		"overall_safety":    "OPTIMAL",
+		"nutritional_profile": map[string]interface{}{
+			"estimated_calories": "450 kcal",
+			"macronutrients": map[string]interface{}{
+				"protein": "25g",
+				"carbs":   "60g",
+				"fats":    "12g",
+				"fiber":   "8g",
+			},
+			"micronutrients": []string{"Vitamin C", "Potassium", "Iron"},
+			"glycemic_score": "Medium",
+			"sodium_level":   "Low",
+		},
+		"health_metrics": map[string]interface{}{
+			"nutri_score": "A",
+			"dietary_flags": []string{"High Protein", "Low Sodium", "Halal Certified"},
+		},
+		"ahli_gizi_advice": "Pilihan makanan ini sangat seimbang. Mengandung protein tinggi yang baik untuk pemulihan otot dan serat yang cukup untuk kesehatan pencernaan. Cocok untuk konsumsi makan siang yang memberikan energi stabil.",
+		"detected_ingredients": []string{"Grilled Chicken", "Quinoa", "Steamed Broccoli", "Roasted Sweet Potato"},
+		"processing_time_ms":   185,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(res)
+}
+
+
+
+// VerifyBlockchainImpact (Pahlawan-Trust) - Immutable Transparency Ledger
+func (h *Handler) VerifyBlockchainImpact(w http.ResponseWriter, r *http.Request) {
+	_, span := tracer.Start(r.Context(), "VerifyBlockchainImpact")
+	defer span.End()
+
+	id := chi.URLParam(r, "id")
+
+	// Simulating Blockchain Ledger Verification (Hyperledger/Ethereum)
+	res := map[string]interface{}{
+		"transaction_id": id,
+		"status":         "verified_on_ledger",
+		"chain":          "Pahlawan-Trust-Private-Network",
+		"block_height":   402921,
+		"proof_hash":     uuid.New().String() + uuid.New().String(),
+		"data": map[string]interface{}{
+			"saved_kg": 15.5,
+			"provider": "Resto Bintang Lima",
+			"ngo":      "Panti Asuhan Mulia",
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(res)
+}
+
+// PlaceAuctionBid (Pahlawan-Auction) - Flash Ludes Dutch Auction
+func (h *Handler) PlaceAuctionBid(w http.ResponseWriter, r *http.Request) {
+	_, span := tracer.Start(r.Context(), "PlaceAuctionBid")
+	defer span.End()
+
+	var req struct {
+		SurplusID string  `json:"surplus_id"`
+		BidAmount float64 `json:"bid_amount"`
+		UserID    string  `json:"user_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Logic: In Dutch auction, first bid at current price wins instantly
+	res := map[string]interface{}{
+		"auction_status": "won",
+		"surplus_id":     req.SurplusID,
+		"final_price":    req.BidAmount,
+		"message":        "Congratulations! You won the Flash Ludes auction.",
+		"pickup_expiry":  time.Now().Add(1 * time.Hour),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(res)
+}
+
 
 

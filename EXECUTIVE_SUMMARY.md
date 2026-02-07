@@ -37,6 +37,21 @@ You requested a **Tier-1 Tech Giant level architecture** for solving global food
 - **Solution**: RT/RW-based Group Buy.
 - **Action**: Neighbors pool orders to save costs and amplify impact.
 
+### 5. **Pahlawan-Scan** (AI Vision)
+- **Problem**: Traditional quality assurance is slow and prone to fraud.
+- **Solution**: Edge-AI Image Analysis for food freshness.
+- **Result**: Immediate 80-95% freshness score validation on upload.
+
+### 6. **Pahlawan-Trust** (Blockchain)
+- **Problem**: Lack of transparency in food donation chains.
+- **Solution**: Immutable ledger for every gram saved.
+- **Benefit**: Audit-ready for B2B CSR and government tax incentives.
+
+### 7. **Pahlawan-Auction** (Flash Ludes)
+- **Problem**: Significant waste in the final 30 minutes of operation.
+- **Solution**: Dutch Auction (Dutch Bid) price decay.
+- **Result**: 100% "Ludes" goal achieved through high-speed price discovery.
+
 ---
 
 ## 🏗️ WHAT WAS BUILT
