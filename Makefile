@@ -23,6 +23,17 @@ test-integration: ## Run professional integration tests
 	@echo "🧬 Running integration tests..."
 	go test -v -tags=integration ./...
 
+bench: ## Run performance benchmarks
+	@echo "⏱️  Running benchmarks..."
+	go test -bench=. -benchmem ./...
+
+security: ## Run security scanner (gosec)
+	@echo "🛡️  Running security scan..."
+	go install github.com/securego/gosec/v2/cmd/gosec@latest
+	gosec ./...
+	go install golang.org/x/vuln/cmd/govulncheck@latest
+	govulncheck ./...
+
 build: ## Build optimized production binary
 	@echo "🏗️ Building production binary..."
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o bin/server cmd/server/main.go
