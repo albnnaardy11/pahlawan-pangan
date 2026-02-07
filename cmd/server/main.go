@@ -9,6 +9,8 @@ import (
 	"syscall"
 	"time"
 
+	apiMiddleware "github.com/albnnaardy11/pahlawan-pangan/internal/api/middleware"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/audit"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/matching"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/messaging"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
@@ -80,6 +82,11 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
+	// Resilience & Governance (Phase 5+)
+	loadshedder := apiMiddleware.NewAdaptiveLoadShedder(500 * time.Millisecond)
+	r.Use(loadshedder.Handle) // Adaptive Load Shedding
+	r.Use(apiMiddleware.CanarySplitter(10, "v1.1.0-canary")) // 10% Canary Rollout
+
 	// Metrics
 	r.Handle("/metrics", promhttp.Handler())
 
@@ -92,6 +99,18 @@ func main() {
 		for {
 			_ = outboxSvc.PollAndPublish(context.Background(), natsPublisher, 100)
 			time.Sleep(1 * time.Second)
+		}
+	}()
+
+	// 8. Start Reconciliation Engine (Midnight Audit Simulation)
+	auditEngine := audit.NewReconciliationEngine()
+	go func() {
+		ticker := time.NewTicker(24 * time.Hour)
+		for {
+			select {
+			case <-ticker.C:
+				_, _ = auditEngine.RunAudit(context.Background())
+			}
 		}
 	}()
 

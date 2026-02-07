@@ -27,7 +27,8 @@ type Handler struct {
 	db            *sql.DB
 	matchEngine   *matching.MatchingEngine
 	outboxService *outbox.OutboxService
-	limiter       *middleware.IPLimiter // SRE-Guard
+	limiter       *middleware.IPLimiter        // SRE-Guard
+	loadshedder   *middleware.AdaptiveLoadShedder // Damage Control
 }
 
 func NewHandler(db *sql.DB, engine *matching.MatchingEngine, outbox *outbox.OutboxService) *Handler {
@@ -35,7 +36,8 @@ func NewHandler(db *sql.DB, engine *matching.MatchingEngine, outbox *outbox.Outb
 		db:            db,
 		matchEngine:   engine,
 		outboxService: outbox,
-		limiter:       middleware.NewIPLimiter(rate.Limit(50), 100), // 50 req/sec per IP, burst 100
+		limiter:       middleware.NewIPLimiter(rate.Limit(50), 100),
+		loadshedder:   middleware.NewAdaptiveLoadShedder(500 * time.Millisecond),
 	}
 }
 
@@ -44,11 +46,18 @@ func (h *Handler) Routes() http.Handler {
 
 	// Middleware
 	r.Use(chiMiddleware.RequestID)
-	r.Use(chiMiddleware.RealIP)
-	r.Use(chiMiddleware.Logger)
 	r.Use(chiMiddleware.Recoverer)
-	r.Use(chiMiddleware.Timeout(5 * time.Second)) // Hard limit for high-scale responsiveness
-	r.Use(middleware.LimitByIP(h.limiter))        // SRE Rate Limiting
+	r.Use(chiMiddleware.Timeout(5 * time.Second))
+	r.Use(middleware.LimitByIP(h.limiter))
+	r.Use(h.loadshedder.Handle) // Adaptive Load Shedding (Netflix Style)
+	
+	// Canary Deployment Indicator
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("X-App-Version", "v1.0.0-canary") // Simulation of 1% Canary Rollout
+			next.ServeHTTP(w, r)
+		})
+	})
 
 	// CORS configuration for Frontend Devs
 	r.Use(cors.Handler(cors.Options{
