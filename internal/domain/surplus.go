@@ -1,0 +1,46 @@
+package domain
+
+import (
+	"context"
+	"time"
+)
+
+// SurplusItem represents the core entity
+type SurplusItem struct {
+	ID                string    `json:"id"`
+	ProviderID        string    `json:"provider_id"`
+	FoodType          string    `json:"food_type"`
+	QuantityKgs       float64   `json:"quantity_kgs"`
+	OriginalPrice     float64   `json:"original_price"`
+	DiscountPrice     float64   `json:"discount_price"`
+	Status            string    `json:"status"` // available, claimed, expired
+	ExpiryTime        time.Time `json:"expiry_time"`
+	Latitude          float64   `json:"lat"`
+	Longitude         float64   `json:"lon"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
+	NutritionReport   *NutritionReport `json:"nutrition_report,omitempty"`
+}
+
+type NutritionReport struct {
+	Calories      string            `json:"calories"`
+	Macronutrients map[string]string `json:"macronutrients"`
+	HealthScore   string            `json:"health_score"`
+	Advice        string            `json:"advice"`
+}
+
+// SurplusRepository defines the data store contract
+type SurplusRepository interface {
+	GetByID(ctx context.Context, id string) (*SurplusItem, error)
+	Fetch(ctx context.Context, lat, lon float64, radius int) ([]SurplusItem, error)
+	Store(ctx context.Context, item *SurplusItem) error
+	Update(ctx context.Context, item *SurplusItem) error
+}
+
+// SurplusUsecase defines the business logic contract
+type SurplusUsecase interface {
+	PostSurplus(ctx context.Context, item *SurplusItem) error
+	GetMarketplace(ctx context.Context, lat, lon float64) ([]SurplusItem, error)
+	Claim(ctx context.Context, surplusID string, ngoID string) error
+	AnalyzeFreshness(ctx context.Context, image []byte) (*NutritionReport, error)
+}
