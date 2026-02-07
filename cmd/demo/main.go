@@ -163,7 +163,11 @@ func ClaimSurplus(w http.ResponseWriter, r *http.Request) {
 
 	// Fintech Layer: Lock Funds
 	escrow := fintech.NewEscrowService()
-	payment, _ := escrow.LockFunds(r.Context(), "NGO-User-001", 25000.0)
+	payment, err := escrow.LockFunds(r.Context(), "NGO-User-001", 25000.0)
+	if err != nil {
+		http.Error(w, "Failed to lock funds", http.StatusInternalServerError)
+		return
+	}
 
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"status": "claimed",

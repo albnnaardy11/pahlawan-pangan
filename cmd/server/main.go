@@ -63,9 +63,17 @@ func main() {
 	if natsURL == "" {
 		natsURL = "nats://localhost:4222"
 	}
-	nc, _ := nats.Connect(natsURL)
+	nc, err := nats.Connect(natsURL)
+	if err != nil {
+		logger.Error("Failed to connect to NATS", zap.Error(err))
+		os.Exit(1)
+	}
 	defer nc.Close()
-	natsPublisher, _ := messaging.NewNATSPublisher(nc)
+	natsPublisher, err := messaging.NewNATSPublisher(nc)
+	if err != nil {
+		logger.Error("Failed to create NATS publisher", zap.Error(err))
+		os.Exit(1)
+	}
 
 	// 5. Dependency Injection (Layered Architecture)
 	repo := surplusRepo.NewSurplusRepository(db, db)

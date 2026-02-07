@@ -114,6 +114,9 @@ func (s *OutboxService) PollAndPublish(ctx context.Context, publisher MessagePub
 		}
 		events = append(events, event)
 	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
 
 	// Publish each event
 	for _, event := range events {

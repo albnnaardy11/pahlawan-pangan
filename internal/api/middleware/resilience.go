@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -25,7 +25,7 @@ func (l *DistributedRateLimiter) Limit(next http.Handler) http.Handler {
 		ip := r.RemoteAddr // In prod: X-Forwarded-For
 		key := "rate_limit:" + ip
 		
-		ctx := context.Background()
+		ctx := r.Context()
 		count, err := l.client.Incr(ctx, key).Result()
 		if err != nil {
 			next.ServeHTTP(w, r) // Fail-open strategy to maintain availability
@@ -37,7 +37,7 @@ func (l *DistributedRateLimiter) Limit(next http.Handler) http.Handler {
 		}
 
 		if int(count) > l.limit {
-			w.Header().Set("X-RateLimit-Limit", string(rune(l.limit)))
+			w.Header().Set("X-RateLimit-Limit", fmt.Sprintf("%d", l.limit))
 			w.WriteHeader(http.StatusTooManyRequests)
 			_, _ = w.Write([]byte("🚫 [SRE-DISTRIBUTED] Rate limit exceeded. Try again in a few seconds."))
 			return
@@ -57,7 +57,7 @@ func IdempotencyMiddleware(client *redis.Client) func(next http.Handler) http.Ha
 				return
 			}
 
-			ctx := context.Background()
+			ctx := r.Context()
 			set, err := client.SetNX(ctx, "idempotency:"+key, "processing", 1*time.Hour).Result()
 			if err != nil || !set {
 				w.WriteHeader(http.StatusConflict)

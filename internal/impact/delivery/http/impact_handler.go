@@ -25,20 +25,32 @@ func NewImpactHandler(r chi.Router, us domain.ImpactUsecase) {
 }
 
 func (h *ImpactHandler) GetNationalLeaderboard(w http.ResponseWriter, r *http.Request) {
-	res, _ := h.Usecase.GetNationalLeaderboard(r.Context(), "Indonesia")
+	res, err := h.Usecase.GetNationalLeaderboard(r.Context(), "Indonesia")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(res)
 }
 
 func (h *ImpactHandler) GetUserImpact(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "id")
-	res, _ := h.Usecase.GetUserImpact(r.Context(), userID)
+	res, err := h.Usecase.GetUserImpact(r.Context(), userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(res)
 }
 
 func (h *ImpactHandler) GenerateShareCard(w http.ResponseWriter, r *http.Request) {
 	claimID := chi.URLParam(r, "claim_id")
-	url, _ := h.Usecase.GenerateShareCard(r.Context(), claimID)
+	url, err := h.Usecase.GenerateShareCard(r.Context(), claimID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	_ = json.NewEncoder(w).Encode(map[string]string{"share_url": url})
 }

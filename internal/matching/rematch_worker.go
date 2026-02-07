@@ -65,7 +65,7 @@ func (w *RematchWorker) HandleRematchEvent(ctx context.Context, event outbox.Out
 
 	// 4. Update Surplus status and notify
 	// Implementation would involve a transaction to update DB and outbox
-	log.Printf("[Rematch] Succesfully re-routed surplus %s to NGO %s", payload.SurplusID, nextNGO.ID)
+	log.Printf("[Rematch] Successfully re-routed surplus %s to NGO %s", payload.SurplusID, nextNGO.ID)
 
 	return nil
 }

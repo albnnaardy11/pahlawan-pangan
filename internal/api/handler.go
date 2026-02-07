@@ -174,7 +174,7 @@ func (h *Handler) PostSurplus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create outbox event
-	payload, _ := json.Marshal(map[string]interface{}{
+	payload, err := json.Marshal(map[string]interface{}{
 		"surplus_id":   surplusID,
 		"provider_id":  req.ProviderID,
 		"lat":          req.Lat,
@@ -182,6 +182,10 @@ func (h *Handler) PostSurplus(w http.ResponseWriter, r *http.Request) {
 		"quantity_kgs": req.QuantityKgs,
 		"expiry_time":  req.ExpiryTime,
 	})
+	if err != nil {
+		http.Error(w, "failed to marshal payload", http.StatusInternalServerError)
+		return
+	}
 
 	event := outbox.OutboxEvent{
 		ID:          uuid.New().String(),
@@ -264,8 +268,11 @@ func (h *Handler) ClaimSurplus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "database error", http.StatusInternalServerError)
 		return
 	}
-
-	rows, _ := result.RowsAffected()
+	rows, err := result.RowsAffected()
+	if err != nil {
+		http.Error(w, "error checking affected rows", http.StatusInternalServerError)
+		return
+	}
 	if rows == 0 {
 		http.Error(w, "surplus already claimed or expired", http.StatusConflict)
 		return
@@ -328,6 +335,10 @@ func (h *Handler) BrowseSurplus(w http.ResponseWriter, r *http.Request) {
 			"current_price":  item.DiscountPrice,
 			"expires_in":     time.Until(item.ExpiryTime).Minutes(),
 		})
+	}
+	if err := rows.Err(); err != nil {
+		http.Error(w, "Error iterating marketplace", http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -590,8 +601,11 @@ func (h *Handler) VerifyPickupCode(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Verification failed", http.StatusInternalServerError)
 		return
 	}
-
-	rows, _ := result.RowsAffected()
+	rows, err := result.RowsAffected()
+	if err != nil {
+		http.Error(w, "error checking affected rows", http.StatusInternalServerError)
+		return
+	}
 	if rows == 0 {
 		http.Error(w, "Invalid or already used verification code", http.StatusNotFound)
 		return
