@@ -45,7 +45,11 @@ func main() {
 	r.Get("/api/v1/impact/verify/{id}", VerifyBlockchainImpact)
 	r.Post("/api/v1/marketplace/auction/bid", PlaceAuctionBid)
 
-	fmt.Println("🚀 Pahlawan Pangan - DEMO SERVER (No Docker Required)")
+	// Viral Engine (New Phase 4)
+	r.Get("/api/v1/impact/leaderboard", GetNationalLeaderboard)
+	r.Get("/api/v1/impact/share/{id}", GenerateShareCard)
+
+	fmt.Println("🚀 Pahlawan Pangan - UNICORN VIRAL ENGINE READY")
 	fmt.Println("-----------------------------------------------------")
 	fmt.Println("✅ In-Memory Database Initialized")
 	fmt.Println("✅ Geo-Spatial Engine (Mock) Ready")
@@ -165,8 +169,6 @@ func AnalyzeFoodImage(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-
-
 func VerifyBlockchainImpact(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	json.NewEncoder(w).Encode(map[string]interface{}{
@@ -174,6 +176,28 @@ func VerifyBlockchainImpact(w http.ResponseWriter, r *http.Request) {
 		"status":         "verified_on_ledger",
 		"chain":          "Pahlawan-Trust-Private",
 		"proof_hash":     uuid.New().String(),
+	})
+}
+
+func GenerateShareCard(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"share_url": fmt.Sprintf("https://pahlawanpangan.org/v/card-%s.png", id),
+		"og_title":  "Saya baru saja menyelamatkan 2kg Makanan!",
+		"og_description": "Bergabunglah menjadi pahlawan dan cegah 5kg Emisi CO2 hari ini.",
+		"cta": "Download Apps Sekarang!",
+	})
+}
+
+func GetNationalLeaderboard(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"top_cities": []map[string]interface{}{
+			{"city": "Bandung", "total_saved_kgs": 45021, "rank": 1},
+			{"city": "Jakarta", "total_saved_kgs": 43902, "rank": 2},
+			{"city": "Surabaya", "total_saved_kgs": 38112, "rank": 3},
+		},
+		"top_merchants": []string{"Hotel Mulia", "Bakmi GM", "Starbucks Indo"},
+		"national_impact": "1.2 Million Kgs of Food Saved in 2026",
 	})
 }
 
