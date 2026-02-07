@@ -7,16 +7,16 @@ import (
 
 // SurplusItem represents the core entity
 type SurplusItem struct {
-	ID                string    `json:"id"`
-	ProviderID        string    `json:"provider_id"`
-	FoodType          string    `json:"food_type"`
-	QuantityKgs       float64   `json:"quantity_kgs"`
-	OriginalPrice     float64   `json:"original_price"`
-	DiscountPrice     float64   `json:"discount_price"`
-	Status            string    `json:"status"` // available, claimed, expired
-	ExpiryTime        time.Time `json:"expiry_time"`
-	Latitude          float64   `json:"lat"`
-	Longitude         float64   `json:"lon"`
+	ID                string    `json:"id" validate:"required,uuid"`
+	ProviderID        string    `json:"provider_id" validate:"required"`
+	FoodType          string    `json:"food_type" validate:"required"`
+	QuantityKgs       float64   `json:"quantity_kgs" validate:"required,gt=0"`
+	OriginalPrice     float64   `json:"original_price" validate:"required,gte=0"`
+	DiscountPrice     float64   `json:"discount_price" validate:"required,gte=0"`
+	Status            string    `json:"status" validate:"required,oneof=available claimed expired"`
+	ExpiryTime        time.Time `json:"expiry_time" validate:"required,gt"`
+	Latitude          float64   `json:"lat" validate:"required,latitude"`
+	Longitude         float64   `json:"lon" validate:"required,longitude"`
 	CreatedAt         time.Time `json:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at"`
 	NutritionReport   *NutritionReport `json:"nutrition_report,omitempty"`
