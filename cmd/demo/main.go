@@ -9,6 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/albnnaardy11/pahlawan-pangan/internal/fintech"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/geo"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"
@@ -88,11 +90,15 @@ func PostSurplus(w http.ResponseWriter, r *http.Request) {
 	surplusDB[item.ID] = item
 	mu.Unlock()
 
+	s2Engine := geo.NewS2Engine()
+	s2ID := s2Engine.GetCellID(-6.2, 106.8) // Jakarta Cell
+
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{
-		"id":      item.ID,
-		"status":  "posted",
-		"message": "Surplus posted successfully (In-Memory)",
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"id":         item.ID,
+		"status":     "posted",
+		"geo_index":  fmt.Sprintf("S2-Cell-%d", s2ID), // Scalable Indexing
+		"message":    "Surplus indexed using Google S2 Geometry",
 	})
 }
 
@@ -143,6 +149,10 @@ func ClaimSurplus(w http.ResponseWriter, r *http.Request) {
 	// Simulate Matching Latency
 	time.Sleep(time.Duration(rand.Intn(100)) * time.Millisecond)
 
+	// Fintech Layer: Lock Funds
+	escrow := fintech.NewEscrowService()
+	payment, _ := escrow.LockFunds(r.Context(), "NGO-User-001", 25000.0)
+
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"status": "claimed",
 		"fulfillment": map[string]string{
@@ -150,6 +160,12 @@ func ClaimSurplus(w http.ResponseWriter, r *http.Request) {
 			"eta": "15 mins",
 			"courier": "Pahlawan-Express Driver #402",
 		},
+		"escrow": map[string]interface{}{
+			"payment_id": payment.ID,
+			"status":     "FUNDS_LOCKED_IN_ESCROW",
+			"amount":     "Rp25.000",
+		},
+		"note": "Uang aman di sistem. Akan dilepaskan ke resto setelah makanan diterima.",
 	})
 }
 

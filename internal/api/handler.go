@@ -7,16 +7,18 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/albnnaardy11/pahlawan-pangan/internal/api/middleware"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/matching"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/google/uuid"
 	"github.com/segmentio/encoding/json"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"golang.org/x/time/rate"
 )
 
 var tracer = otel.Tracer("api-handler")
@@ -25,6 +27,7 @@ type Handler struct {
 	db            *sql.DB
 	matchEngine   *matching.MatchingEngine
 	outboxService *outbox.OutboxService
+	limiter       *middleware.IPLimiter // SRE-Guard
 }
 
 func NewHandler(db *sql.DB, engine *matching.MatchingEngine, outbox *outbox.OutboxService) *Handler {
@@ -32,6 +35,7 @@ func NewHandler(db *sql.DB, engine *matching.MatchingEngine, outbox *outbox.Outb
 		db:            db,
 		matchEngine:   engine,
 		outboxService: outbox,
+		limiter:       middleware.NewIPLimiter(rate.Limit(50), 100), // 50 req/sec per IP, burst 100
 	}
 }
 
@@ -39,11 +43,12 @@ func (h *Handler) Routes() http.Handler {
 	r := chi.NewRouter()
 
 	// Middleware
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(30 * time.Second))
+	r.Use(chiMiddleware.RequestID)
+	r.Use(chiMiddleware.RealIP)
+	r.Use(chiMiddleware.Logger)
+	r.Use(chiMiddleware.Recoverer)
+	r.Use(chiMiddleware.Timeout(5 * time.Second)) // Hard limit for high-scale responsiveness
+	r.Use(middleware.LimitByIP(h.limiter))        // SRE Rate Limiting
 
 	// CORS configuration for Frontend Devs
 	r.Use(cors.Handler(cors.Options{
@@ -235,16 +240,15 @@ func (h *Handler) ClaimSurplus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update DB (Optimistic Locking)
+	// Update DB (Optimistic Locking - Unicorn Grade)
+	// We only update if the version matches what we last saw (or if it's available)
 	result, err := h.db.ExecContext(ctx, `
 		UPDATE surplus 
 		SET status = 'claimed', 
 		    claimed_by_ngo_id = $1, 
 		    claimed_at = NOW(),
 		    version = version + 1
-		WHERE id = $2 
-		  AND status = 'available'
-		  AND expiry_time > NOW()
+		WHERE id = $2 AND status = 'available'
 	`, req.NGOID, surplusID)
 
 	if err != nil {

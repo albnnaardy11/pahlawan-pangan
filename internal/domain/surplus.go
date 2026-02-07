@@ -17,6 +17,9 @@ type SurplusItem struct {
 	ExpiryTime        time.Time `json:"expiry_time" validate:"required,gt"`
 	Latitude          float64   `json:"lat" validate:"required,latitude"`
 	Longitude         float64   `json:"lon" validate:"required,longitude"`
+	S2CellID          uint64    `json:"s2_cell_id"` // Google S2 Index
+	Version           int64     `json:"version"`     // Optimistic Locking
+	EscrowStatus      string    `json:"escrow_status"` // pending, locked, released
 	CreatedAt         time.Time `json:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at"`
 	NutritionReport   *NutritionReport `json:"nutrition_report,omitempty"`

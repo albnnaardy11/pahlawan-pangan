@@ -83,18 +83,32 @@ func (e *MatchingEngine) MatchNGO(ctx context.Context, surplus Surplus, candidat
 	// In a real actor model, this would be handled within a Shard Actor.
 	// Here we show a robust concurrent selection pattern.
 
-	type result struct {
+	type matchResult struct {
 		ngo      *NGO
 		distance float64
 		err      error
 	}
 
-	resChan := make(chan result, len(candidates))
+	// SRE Optimization: sync.Pool to reduce GC allocations during match storms
+	pool := sync.Pool{
+		New: func() interface{} { return new(matchResult) },
+	}
+
+	resChan := make(chan *matchResult, len(candidates))
 
 	for _, ngo := range candidates {
+		// Bounded Concurrency: Use worker pool semaphore
+		e.workerPool <- struct{}{} // Acquire
 		go func(n NGO) {
+			defer func() { <-e.workerPool }() // Release
+			
 			dist, err := e.getDistance(ctx, surplus.Lat, surplus.Lon, n.Lat, n.Lon)
-			resChan <- result{&n, dist, err}
+			
+			res := pool.Get().(*matchResult)
+			res.ngo = &n
+			res.distance = dist
+			res.err = err
+			resChan <- res
 		}(ngo)
 	}
 
@@ -107,6 +121,8 @@ func (e *MatchingEngine) MatchNGO(ctx context.Context, surplus Surplus, candidat
 				minDistance = res.distance
 				bestNGO = res.ngo
 			}
+			// Return to pool after processing
+			pool.Put(res)
 		}
 	}
 

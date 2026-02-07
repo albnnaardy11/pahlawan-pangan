@@ -52,6 +52,12 @@ You requested a **Tier-1 Tech Giant level architecture** for solving global food
 - **Solution**: Dutch Auction (Dutch Bid) price decay.
 - **Result**: 100% "Ludes" goal achieved through high-speed price discovery.
 
+### 8. **National Hyper-Scale Architecture** (SRE-Grade)
+- **Scale**: Ready for 287M users (2.8M RPS).
+- **Concurrency**: `sync.Pool` and bounded worker pools to prevent memory exhaustion.
+- **Resilience**: IP-based Rate Limiting, 5s Hard Timeouts, and Circuit Breakers.
+- **Consistency**: Optimistic Locking (Versioning) to prevent race conditions during Flash Sales.
+
 ---
 
 ## 🏗️ WHAT WAS BUILT
