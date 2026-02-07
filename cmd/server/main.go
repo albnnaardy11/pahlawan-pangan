@@ -116,8 +116,9 @@ func main() {
 
 	// 8. Server Setup
 	srv := &http.Server{
-		Addr:    ":8080",
-		Handler: r,
+		Addr:              ":8080",
+		Handler:           r,
+		ReadHeaderTimeout: 5 * time.Second,
 	}
 
 	go func() {

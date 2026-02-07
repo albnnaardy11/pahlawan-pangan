@@ -159,7 +159,7 @@ func ClaimSurplus(w http.ResponseWriter, r *http.Request) {
 	surplusDB[id] = item
 
 	// Simulate Matching Latency
-	time.Sleep(time.Duration(rand.IntN(100)) * time.Millisecond)
+	time.Sleep(time.Duration(rand.IntN(100)) * time.Millisecond) // #nosec G404
 
 	// Fintech Layer: Lock Funds
 	escrow := fintech.NewEscrowService()

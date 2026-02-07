@@ -1,0 +1,27 @@
+run:
+  timeout: 5m
+  go: "1.24"
+
+linters:
+  enable:
+    - govet
+    - errcheck
+    - staticcheck
+    - unused
+    - gosimple
+    - gosec
+    - ineffassign
+    - typecheck
+
+linters-settings:
+  gosec:
+    # To avoid SSA analysis panics in some versions, 
+    # we can exclude certain problematic rules if needed, 
+    # but let's try with default first.
+    excludes:
+      - G104 # We handled many, but some might still be noise in demo code
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0

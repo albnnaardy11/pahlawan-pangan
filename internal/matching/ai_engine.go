@@ -26,8 +26,8 @@ func (ai *AIEngine) PredictWaste(ctx context.Context, providerID string) (Predic
 	// Simulating ML Inference
 	// Logic: If it's raining in Jakarta, restaurant footfall drops -> waste increases.
 
-	predictedWaste := 5.0 + rand.Float64()*15.0 // Random 5-20kg for simulation
-	confidence := 0.75 + rand.Float64()*0.20
+	predictedWaste := 5.0 + rand.Float64()*15.0 // #nosec G404
+	confidence := 0.75 + rand.Float64()*0.20     // #nosec G404
 
 	action := "Normal Matching"
 	if predictedWaste > 15.0 {

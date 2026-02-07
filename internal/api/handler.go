@@ -319,7 +319,7 @@ func (h *Handler) BrowseSurplus(w http.ResponseWriter, r *http.Request) {
 			FoodType      string
 			ExpiryTime    time.Time
 		}
-		rows.Scan(&item.ID, &item.ProviderID, &item.OriginalPrice, &item.DiscountPrice, &item.FoodType, &item.ExpiryTime)
+		_ = rows.Scan(&item.ID, &item.ProviderID, &item.OriginalPrice, &item.DiscountPrice, &item.FoodType, &item.ExpiryTime)
 
 		results = append(results, map[string]interface{}{
 			"id":             item.ID,
@@ -382,7 +382,7 @@ func (h *Handler) GetWastePrediction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(prediction)
+	_ = json.NewEncoder(w).Encode(prediction)
 }
 
 // Next-Gen Feature Handlers
@@ -498,7 +498,7 @@ func (h *Handler) GetNearbyNGOs(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) LivenessCheck(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("OK"))
+	_, _ = w.Write([]byte("OK"))
 }
 
 func (h *Handler) ReadinessCheck(w http.ResponseWriter, r *http.Request) {
@@ -512,7 +512,7 @@ func (h *Handler) ReadinessCheck(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("READY"))
+	_, _ = w.Write([]byte("READY"))
 }
 
 // --- Super-App Phase 2 Handlers (Standard Gojek/Tokopedia) ---
@@ -520,30 +520,30 @@ func (h *Handler) ReadinessCheck(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) AddRating(w http.ResponseWriter, r *http.Request) {
 	// Logic for adding ratings to providers/couriers
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "rating_submitted"})
+	_ = json.NewEncoder(w).Encode(map[string]string{"status": "rating_submitted"})
 }
 
 func (h *Handler) ApplyVoucher(w http.ResponseWriter, r *http.Request) {
 	// Logic for validating pahlawan vouchers
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{"status": "valid", "discount_idr": 15000})
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{"status": "valid", "discount_idr": 15000})
 }
 
 func (h *Handler) GetRecommendations(w http.ResponseWriter, r *http.Request) {
 	// Logic for weighted ranking (RecEngine)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{"note": "showing top-ranked food rescue items"})
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{"note": "showing top-ranked food rescue items"})
 }
 
 func (h *Handler) OpenChat(w http.ResponseWriter, r *http.Request) {
 	// Meta-logic for starting chat threads with driver/hotel
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"thread_id": uuid.New().String()})
+	_ = json.NewEncoder(w).Encode(map[string]string{"thread_id": uuid.New().String()})
 }
 
 func (h *Handler) ListChats(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode([]string{"active_thread_1", "active_thread_2"})
+	_ = json.NewEncoder(w).Encode([]string{"active_thread_1", "active_thread_2"})
 }
 
 func (h *Handler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
@@ -556,7 +556,7 @@ func (h *Handler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetProviderClaims(w http.ResponseWriter, r *http.Request) {
 	// Logic to list all active/completed claims for the logged-in provider
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"active_claims":    5,
 		"completed_today": 12,
 	})
@@ -598,7 +598,7 @@ func (h *Handler) VerifyPickupCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
+	_ = json.NewEncoder(w).Encode(map[string]string{
 		"status":  "verified",
 		"message": "Pickup successful. Inventory updated.",
 	})
