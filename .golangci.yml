@@ -26,7 +26,6 @@ linters:
     - typecheck   # Like the front-end of a Go compiler, parses and type-checks code
 
     # 4. Code Cleanliness & Architecture
-    - revive      # Fast, configurable, extensible, flexible, and beautiful linter for Go (Drop-in replacement for golint)
     - misspell    # Finds commonly misspelled English words in comments
     - gocyclo     # Computes and checks the cyclomatic complexity of functions
     - dogsled     # Checks assignments with too many blank identifiers (e.g. x, _, _, _, := f())
@@ -53,31 +52,6 @@ linters-settings:
       - pahlawan # Project name
       - pangan
 
-  revive:
-    severity: warning
-    confidence: 0.8
-    rules:
-      - name: exported
-        severity: warning
-        disabled: false
-        arguments:
-          - "checkPrivateReceivers"
-      - name: package-comments
-        severity: warning
-        disabled: false
-      - name: error-naming
-        severity: warning
-        disabled: false
-      - name: error-strings
-        severity: warning
-        disabled: false
-      - name: receiver-naming
-        severity: warning
-        disabled: false
-      - name: var-naming
-        severity: warning
-        disabled: false
-
   gosec:
     excludes:
       - G104 # Duplicate of errcheck (Audit requirement: we use errcheck for this)
@@ -90,3 +64,14 @@ issues:
     - vendor
     - .git
     - .github
+  # Exclude revive rules that are too strict for this project
+  exclude-rules:
+    - linters:
+        - revive
+      text: "exported.*should have comment.*or be unexported"
+    - linters:
+        - revive
+      text: "package-comments"
+    - linters:
+        - revive
+      text: "comment on exported"

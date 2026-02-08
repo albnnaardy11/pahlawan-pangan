@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// UserImpact represents a user's environmental and social impact metrics.
 type UserImpact struct {
 	UserID        string    `json:"user_id"`
 	TotalSavedKgs float64   `json:"total_saved_kgs"`
@@ -16,6 +17,7 @@ type UserImpact struct {
 	LastUpdate    time.Time `json:"last_update"`
 }
 
+// GlobalLeaderboard represents the national or regional impact rankings.
 type GlobalLeaderboard struct {
 	Region   string       `json:"region"`
 	Rankings []UserImpact `json:"rankings"`
@@ -23,6 +25,7 @@ type GlobalLeaderboard struct {
 	TotalCO2 float64      `json:"total_national_co2_saved"`
 }
 
+// ImpactUsecase defines the business logic interface for impact tracking and leaderboards.
 type ImpactUsecase interface {
 	GetUserImpact(ctx context.Context, userID string) (*UserImpact, error)
 	GetNationalLeaderboard(ctx context.Context, region string) (*GlobalLeaderboard, error)

@@ -25,6 +25,7 @@ type SurplusItem struct {
 	NutritionReport *NutritionReport `json:"nutrition_report,omitempty"`
 }
 
+// NutritionReport contains AI-generated nutritional analysis of food items.
 type NutritionReport struct {
 	Calories       string            `json:"calories"`
 	Macronutrients map[string]string `json:"macronutrients"`
