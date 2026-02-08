@@ -22,19 +22,21 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 # Runtime stage
 FROM alpine:latest
 
-RUN apk --no-cache add ca-certificates tzdata
+# Tambahkan keamanan extra
+RUN apk --no-cache add ca-certificates tzdata && \
+    addgroup -S pahlawan && adduser -S pahlawan -G pahlawan
 
-WORKDIR /root/
+WORKDIR /home/pahlawan/
 
-# Copy binary from builder
+# Copy binary
 COPY --from=builder /app/server .
 
-# Expose ports
+# Jalankan sebagai user biasa, bukan root
+USER pahlawan
+
 EXPOSE 8080 9090
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health/live || exit 1
 
-# Run
 CMD ["./server"]

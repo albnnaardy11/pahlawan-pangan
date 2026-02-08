@@ -1,54 +1,84 @@
-.PHONY: help build test run docker-build docker-run k8s-deploy clean lint fmt tidy
-.DEFAULT_GOAL := help
 
-# --- Professional Automation ---
+# Variables
+APP_NAME := pahlawan-pangan
+BUILD_DIR := bin
+CMD_DIR := ./cmd/server
+DOCKER_IMAGE := pahlawan-pangan
 
-help: ## Show this help
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+# Tools
+GO := go
+DOCKER := docker
+LINT := golangci-lint
 
-lint: ## Run professional linters (golangci-lint)
-	@echo "🔍 Running linters..."
-	golangci-lint run ./...
+# Default target
+.PHONY: all
+all: clean lint test build
 
-fmt: ## Professional code formatting
-	@echo "✨ Formatting code..."
-	go fmt ./...
-	goimports -w .
+# Build the application
+.PHONY: build
+build:
+	@echo "Building $(APP_NAME)..."
+	@mkdir -p $(BUILD_DIR)
+	$(GO) build -ldflags="-w -s" -o $(BUILD_DIR)/server $(CMD_DIR)
 
-test: ## Run unit tests with race detection and coverage
-	@echo "🧪 Running unit tests..."
-	go test -v -race -coverprofile=coverage.out ./...
+# Run the application locally
+.PHONY: run
+run:
+	@echo "Running $(APP_NAME)..."
+	$(GO) run $(CMD_DIR)
 
-test-integration: ## Run professional integration tests
-	@echo "🧬 Running integration tests..."
-	go test -v -tags=integration ./...
+# Run tests
+.PHONY: test
+test:
+	@echo "Running tests..."
+	$(GO) test -v -race -cover ./...
 
-bench: ## Run performance benchmarks
-	@echo "⏱️  Running benchmarks..."
-	go test -bench=. -benchmem ./...
+# Run linter
+.PHONY: lint
+lint:
+	@echo "Running linter..."
+	$(LINT) run ./...
 
-security: ## Run security scanner (gosec)
-	@echo "🛡️  Running security scan..."
-	go install github.com/securego/gosec/v2/cmd/gosec@latest
-	gosec ./...
-	go install golang.org/x/vuln/cmd/govulncheck@latest
-	govulncheck ./...
+# Clean build artifacts
+.PHONY: clean
+clean:
+	@echo "Cleaning..."
+	@rm -rf $(BUILD_DIR)
 
-build: ## Build optimized production binary
-	@echo "🏗️ Building production binary..."
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o bin/server cmd/server/main.go
+# Docker build
+.PHONY: docker-build
+docker-build:
+	@echo "Building Docker image..."
+	$(DOCKER) build -t $(DOCKER_IMAGE) .
 
-docker-build: ## Multi-stage Docker build
-	@echo "🐳 Building Docker image..."
-	docker build -t pahlawan-pangan:v1 .
+# Docker run
+.PHONY: docker-run
+docker-run:
+	@echo "Running Docker container..."
+	$(DOCKER) run -p 8080:8080 -p 9090:9090 $(DOCKER_IMAGE)
 
-run: ## Run server locally
-	@echo "🚀 Starting server..."
-	go run cmd/server/main.go
+# Database migration (placeholder using scripts)
+.PHONY: migrate
+migrate:
+	@echo "Running migrations..."
+	@sh ./scripts/migrate.sh
 
-tidy: ## Tidy and verify go modules
-	@echo "🧹 Tidying modules..."
-	go mod tidy
-	go mod verify
+# Seed database (placeholder using scripts)
+.PHONY: seed
+seed:
+	@echo "Seeding database..."
+	@sh ./scripts/seed.sh
 
-all: fmt tidy lint test build ## Run all professional checks and build
+# Help
+.PHONY: help
+help:
+	@echo "Available commands:"
+	@echo "  make build         - Build the application"
+	@echo "  make run           - Run the application locally"
+	@echo "  make test          - Run tests"
+	@echo "  make lint          - Run linter"
+	@echo "  make clean         - Clean build artifacts"
+	@echo "  make docker-build  - Build Docker image"
+	@echo "  make docker-run    - Run Docker container"
+	@echo "  make migrate       - Run database migrations"
+	@echo "  make seed          - Seed database"

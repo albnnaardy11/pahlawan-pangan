@@ -11,9 +11,12 @@ import (
 
 	apiMiddleware "github.com/albnnaardy11/pahlawan-pangan/internal/api/middleware"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/audit"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/geo"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/matching"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/messaging"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/notifications"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/worker"
 	"github.com/albnnaardy11/pahlawan-pangan/pkg/cache"
 	"github.com/albnnaardy11/pahlawan-pangan/pkg/logger"
 
@@ -31,6 +34,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/nats-io/nats.go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
 
@@ -55,12 +59,19 @@ func main() {
 		}
 	}()
 
-	// 3. Redis Caching
+	// 3. Redis Caching & Geo Engine
 	redisAddr := os.Getenv("REDIS_URL")
 	if redisAddr == "" {
 		redisAddr = "localhost:6379"
 	}
-	_ = cache.NewRedisCache(redisAddr) // Initialized but used inside repos/usecases
+	// Direct client for Geo Service
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: redisAddr,
+	})
+	defer redisClient.Close()
+	
+	// Legacy cache init (if needed, or reuse redisClient if possible, but keeping separate for safety)
+	_ = cache.NewRedisCache(redisAddr)
 
 	// 4. Message Broker (NATS)
 	natsURL := os.Getenv("NATS_URL")
@@ -130,6 +141,13 @@ func main() {
 		Handler:           r,
 		ReadHeaderTimeout: 5 * time.Second,
 	}
+
+	// 9. Unicorn Logic: Real-time Notification Engine
+	geoSvc := geo.NewGeoService(redisClient) // Use the initialized redisClient
+	notifSvc := &notifications.NotificationService{} // In real app, inject FCM client here
+	
+	notifierWorker := worker.NewSurplusNotifier(geoSvc, notifSvc)
+	go notifierWorker.Run(context.Background(), nc)
 
 	go func() {
 		logger.Info("Listening on port 8080")
