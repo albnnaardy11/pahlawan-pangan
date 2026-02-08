@@ -33,7 +33,7 @@ func (s *GeoService) UpdateUserLocation(ctx context.Context, userID string, lat,
 
 	// Also update a standard key to track "last active" time if needed
 	// s.redis.Set(ctx, "last_active:"+userID, time.Now().Unix(), GeoExpiry)
-	
+
 	return err
 }
 
@@ -59,6 +59,6 @@ func (s *GeoService) FindUsersNearby(ctx context.Context, lat, lon, radiusMeters
 	for i, loc := range locations {
 		userIDs[i] = loc.Name
 	}
-	
+
 	return userIDs, nil
 }

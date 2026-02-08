@@ -28,7 +28,7 @@ func (e *S2Engine) GetCellID(lat, lon float64) uint64 {
 func (e *S2Engine) GetNearbyCells(lat, lon float64) []uint64 {
 	latlng := s2.LatLngFromDegrees(lat, lon)
 	centerCell := s2.CellIDFromLatLng(latlng).Parent(e.Level)
-	
+
 	neighbors := centerCell.AllNeighbors(e.Level)
 	ids := make([]uint64, len(neighbors)+1)
 	ids[0] = uint64(centerCell)

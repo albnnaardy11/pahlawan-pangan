@@ -19,12 +19,12 @@ const (
 func TestHardStressSimulation(t *testing.T) {
 	// Skenario: "Total Chaos" - Menghantam Server dari Segala Sisi
 	const (
-		Duration       = 10 * time.Second
-		ProviderCount  = 100 // Tukang Post
-		NGOCount       = 300 // Tukang Klaim
-		AICount        = 100 // Tukang Scan Foto
-		TrustCount     = 100 // Tukang Cek Blockchain
-		AuctionCount   = 200 // Tukang Lelang (Bidding)
+		Duration      = 10 * time.Second
+		ProviderCount = 100 // Tukang Post
+		NGOCount      = 300 // Tukang Klaim
+		AICount       = 100 // Tukang Scan Foto
+		TrustCount    = 100 // Tukang Cek Blockchain
+		AuctionCount  = 200 // Tukang Lelang (Bidding)
 	)
 
 	fmt.Printf("\n🔥🔥 STARTING HARD STRESS TEST (Duration: %v) 🔥🔥\n", Duration)
@@ -37,12 +37,12 @@ func TestHardStressSimulation(t *testing.T) {
 
 	var wg sync.WaitGroup
 	var (
-		totalPosts      int64
-		totalClaims     int64
-		totalAIAnalyses int64
+		totalPosts       int64
+		totalClaims      int64
+		totalAIAnalyses  int64
 		totalTrustChecks int64
-		totalBids       int64
-		totalErrors     int64
+		totalBids        int64
+		totalErrors      int64
 	)
 
 	start := time.Now()
@@ -109,7 +109,7 @@ func TestHardStressSimulation(t *testing.T) {
 					var list []map[string]interface{}
 					_ = json.NewDecoder(resp.Body).Decode(&list)
 					_ = resp.Body.Close()
-					
+
 					// Random claim
 					if len(list) > 0 {
 						//nolint:gosec // G404: Using math/rand for test random selection, not cryptographic purposes
@@ -179,7 +179,7 @@ func TestHardStressSimulation(t *testing.T) {
 	fmt.Printf("   🏁 Duration: %v\n", totalTime)
 	fmt.Printf("   👨‍🍳 Posts Success: %d\n", totalPosts)
 	fmt.Printf("   🤝 Claims Success: %d\n", totalClaims)
-	fmt.Printf("   🤖 AI Analyses: %d\n", totalAIAnalyses)
+	fmt.Printf("   🤖 AI Analyzes: %d\n", totalAIAnalyses)
 	fmt.Printf("   ⛓️ Blockchain Verifications: %d\n", totalTrustChecks)
 	fmt.Printf("   ⚡ Auction Bids: %d\n", totalBids)
 	fmt.Printf("   ❌ Total Failures: %d\n", totalErrors)

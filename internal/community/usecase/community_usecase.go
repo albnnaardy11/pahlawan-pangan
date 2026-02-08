@@ -5,8 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/albnnaardy11/pahlawan-pangan/internal/community/domain"
 	"github.com/google/uuid"
+
+	"github.com/albnnaardy11/pahlawan-pangan/internal/community/domain"
 )
 
 type communityUsecase struct {
@@ -30,7 +31,7 @@ func (u *communityUsecase) SubmitReview(ctx context.Context, review domain.Revie
 
 	review.ID = uuid.New().String()
 	review.CreatedAt = time.Now()
-	
+
 	// 2. Persist
 	return u.repo.Create(ctx, review)
 }
@@ -44,7 +45,7 @@ func (u *communityUsecase) GetVendorReputation(ctx context.Context, vendorID str
 	if err != nil {
 		return domain.CommunitySummary{}, err
 	}
-	
+
 	// Add "Unicorn Badge" logic
 	if summary.AverageRating > 4.8 && summary.TotalReviews > 100 {
 		summary.TopTags = append(summary.TopTags, "🌟 Pahlawan Super")

@@ -6,8 +6,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/albnnaardy11/pahlawan-pangan/internal/logistics/domain"
 	"github.com/golang/geo/s2"
+
+	"github.com/albnnaardy11/pahlawan-pangan/internal/logistics/domain"
 )
 
 // BatchingEngine handles the complex clustering logic
@@ -73,11 +74,12 @@ func (e *BatchingEngine) CalculateOptimalBatch(ctx context.Context, pendingOrder
 		}
 	}
 
-
 	// 4. Scoring Algorithm
 	var prioritizedBatches []domain.Batch
 	for _, b := range batches {
-		if b == nil { continue }
+		if b == nil {
+			continue
+		}
 		score := e.calculateBatchScore(*b, courierLoc)
 		b.Score = score
 		prioritizedBatches = append(prioritizedBatches, *b)
@@ -111,13 +113,17 @@ func (e *BatchingEngine) calculateBatchScore(batch domain.Batch, courierLoc s2.L
 
 		// SLA Urgency
 		urgency := 10.0
-		if o.CurrentSLA == domain.SLA_EXPRESS { urgency = 100.0 }
-		if o.CurrentSLA == domain.SLA_STANDARD { urgency = 50.0 }
+		if o.CurrentSLA == domain.SLA_EXPRESS {
+			urgency = 100.0
+		}
+		if o.CurrentSLA == domain.SLA_STANDARD {
+			urgency = 50.0
+		}
 		if urgency > minSLAUrgency {
 			minSLAUrgency = urgency
 		}
 	}
-	
+
 	avgLat := totalLat / float64(len(batch.Orders))
 	avgLon := totalLon / float64(len(batch.Orders))
 
@@ -127,7 +133,7 @@ func (e *BatchingEngine) calculateBatchScore(batch domain.Batch, courierLoc s2.L
 
 	// Weighted Formula: (Distance * 0.3) + (SLA * 0.4) + (Expiry * 0.3)
 	finalScore := (distanceScore * 0.3) + (minSLAUrgency * 0.4) + (maxExpiryPenalty * 0.3)
-	
+
 	return finalScore
 }
 

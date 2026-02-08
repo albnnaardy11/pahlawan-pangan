@@ -8,30 +8,30 @@ import (
 type ReviewType string
 
 const (
-	ReviewTypeFood   ReviewType = "FOOD"
-	ReviewTypeVendor ReviewType = "VENDOR"
+	ReviewTypeFood    ReviewType = "FOOD"
+	ReviewTypeVendor  ReviewType = "VENDOR"
 	ReviewTypeCourier ReviewType = "COURIER"
 )
 
 // Review represents a user's feedback
 type Review struct {
-	ID        string    `json:"id"`
-	UserID    string    `json:"user_id"`
-	TargetID  string    `json:"target_id"` // SurplusID, VendorID, or CourierID
-	Type      ReviewType `json:"type"`
-	Rating    int       `json:"rating"` // 1-5
-	Comment   string    `json:"comment"`
-	Tags      []string  `json:"tags"`   // e.g., ["Fresh", "Big Portion", "Fast"]
-	Images    []string  `json:"images"`
-	CreatedAt time.Time `json:"created_at"`
-	IsVerified bool     `json:"is_verified"` // True if transaction confirmed
+	ID         string     `json:"id"`
+	UserID     string     `json:"user_id"`
+	TargetID   string     `json:"target_id"` // SurplusID, VendorID, or CourierID
+	Type       ReviewType `json:"type"`
+	Rating     int        `json:"rating"` // 1-5
+	Comment    string     `json:"comment"`
+	Tags       []string   `json:"tags"` // e.g., ["Fresh", "Big Portion", "Fast"]
+	Images     []string   `json:"images"`
+	CreatedAt  time.Time  `json:"created_at"`
+	IsVerified bool       `json:"is_verified"` // True if transaction confirmed
 }
 
 // CommunitySummary aggregates ratings
 type CommunitySummary struct {
-	TargetID      string  `json:"target_id"`
-	AverageRating float64 `json:"average_rating"`
-	TotalReviews  int     `json:"total_reviews"`
+	TargetID      string   `json:"target_id"`
+	AverageRating float64  `json:"average_rating"`
+	TotalReviews  int      `json:"total_reviews"`
 	TopTags       []string `json:"top_tags"`
 }
 

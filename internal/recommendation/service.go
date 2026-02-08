@@ -18,21 +18,21 @@ func NewRecommendationService() *RecommendationService {
 }
 
 type Recommendation struct {
-	SurplusID   string  `json:"surplus_id"`
-	Reason      string  `json:"reason"` // e.g., "Usually ordered at 4 PM"
-	Score       float64 `json:"score"`
-	DistanceM   float64 `json:"distance_m"`
+	SurplusID string  `json:"surplus_id"`
+	Reason    string  `json:"reason"` // e.g., "Usually ordered at 4 PM"
+	Score     float64 `json:"score"`
+	DistanceM float64 `json:"distance_m"`
 }
 
 // GetSmartNudges returns personalized recommendations using S2 cells and history
 func (s *RecommendationService) GetSmartNudges(ctx context.Context, userID string, lat, lon float64) ([]Recommendation, error) {
 	// 1. Convert User Location to S2 Cell (Level 13 ~1km radius)
 	cellID := s2.CellIDFromLatLng(s2.LatLngFromDegrees(lat, lon)).Parent(13)
-	
+
 	// 2. Logic: "Data Lake" Analysis (Simulated)
 	// Query historical patterns for this user in this cell
 	// e.g., "User buys bread in Cell X between 16:00-18:00"
-	
+
 	hour := time.Now().Hour()
 	var recs []Recommendation
 

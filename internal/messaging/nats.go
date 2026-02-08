@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
 	"github.com/nats-io/nats.go"
 	"github.com/segmentio/encoding/json"
 	"go.opentelemetry.io/otel"
+
+	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
 )
 
 var tracer = otel.Tracer("nats-publisher")
@@ -46,7 +47,7 @@ func NewNATSPublisher(nc *nats.Conn) (*NATSPublisher, error) {
 	return &NATSPublisher{js: js}, nil
 }
 
-func (p *NATSPublisher) Publish(ctx context.Context, event outbox.OutboxEvent) error {
+func (p *NATSPublisher) Publish(ctx context.Context, event outbox.Event) error {
 	ctx, span := tracer.Start(ctx, "NATSPublish")
 	defer span.End()
 

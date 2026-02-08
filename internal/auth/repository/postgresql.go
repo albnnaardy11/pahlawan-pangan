@@ -5,12 +5,13 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/albnnaardy11/pahlawan-pangan/internal/auth/domain"
-	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/albnnaardy11/pahlawan-pangan/internal/auth/domain"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
 )
 
 var tracer = otel.Tracer("internal/auth/repository")
@@ -66,7 +67,7 @@ func (r *pgUserRepository) WithTransaction(ctx context.Context, fn func(domain.U
 		span.SetStatus(codes.Error, "commit failed")
 		return err
 	}
-	
+
 	span.SetStatus(codes.Ok, "transaction committed")
 	return nil
 }
@@ -96,7 +97,7 @@ func (r *pgUserRepository) SaveAudit(ctx context.Context, event *domain.AccountE
 	return nil
 }
 
-func (r *pgUserRepository) SaveOutbox(ctx context.Context, event *outbox.OutboxEvent) error {
+func (r *pgUserRepository) SaveOutbox(ctx context.Context, event *outbox.Event) error {
 	ctx, span := tracer.Start(ctx, "db.save_outbox", trace.WithAttributes(
 		attribute.String("outbox.event_type", string(event.EventType)),
 		attribute.String("outbox.aggregate_id", event.AggregateID),
@@ -175,7 +176,7 @@ func (r *pgUserRepository) GetByEmail(ctx context.Context, email string) (*domai
 	// Dual-Read: Select both. Application logic chooses valid one.
 	query := `SELECT id, email, contact_email, phone, password_hash, full_name, role, status, created_at, updated_at FROM users WHERE email = $1 OR contact_email = $1`
 	user := &domain.User{}
-	
+
 	var emailCol, contactEmailCol sql.NullString
 
 	err := r.executor().QueryRowContext(ctx, query, email).Scan(
@@ -258,7 +259,7 @@ func (r *pgUserRepository) GetByIDForUpdate(ctx context.Context, id string) (*do
 	query := `SELECT id, email, contact_email, phone, password_hash, full_name, role, status, created_at, updated_at FROM users WHERE id = $1 FOR UPDATE`
 	// Attribute the statement for clarity in traces
 	span.SetAttributes(attribute.String("db.statement", query))
-	
+
 	user := &domain.User{}
 	var emailCol, contactEmailCol sql.NullString
 

@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/albnnaardy11/pahlawan-pangan/internal/domain"
 	"github.com/go-chi/chi/v5"
+
+	"github.com/albnnaardy11/pahlawan-pangan/internal/domain"
 )
 
 type DisputeHandler struct {

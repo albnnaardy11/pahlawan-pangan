@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/albnnaardy11/pahlawan-pangan/internal/escrow/domain"
 	"github.com/google/uuid"
+
+	"github.com/albnnaardy11/pahlawan-pangan/internal/escrow/domain"
 )
 
 type EscrowService struct {
@@ -68,10 +69,10 @@ func (s *EscrowService) getAggregatedState(orderID string) *domain.EscrowState {
 			relevantEvents = append(relevantEvents, e)
 		}
 	}
-	
+
 	// Default state
 	state := &domain.EscrowState{Status: "PENDING", OrderID: orderID}
-	
+
 	// Apply events in order
 	for _, e := range relevantEvents {
 		switch e.Type {

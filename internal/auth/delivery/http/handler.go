@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/albnnaardy11/pahlawan-pangan/internal/auth/domain"
 	"github.com/go-chi/chi/v5"
+
+	"github.com/albnnaardy11/pahlawan-pangan/internal/auth/domain"
 )
 
 type AuthHandler struct {
@@ -70,7 +71,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	authHeader := r.Header.Get("Authorization")
 	token := strings.TrimPrefix(authHeader, "Bearer ")
-	
+
 	if err := h.Usecase.Logout(r.Context(), token); err != nil {
 		http.Error(w, "failed to logout", http.StatusInternalServerError)
 		return

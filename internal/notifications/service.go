@@ -41,19 +41,19 @@ func (s *NotificationService) NotifyBatch(ctx context.Context, userIDs []string,
 	// Parallel processing using a semaphore to limit concurrent HTTP requests
 	// Unicorn scale: we might hit 10k users. We don't want 10k goroutines instantly.
 	sem := make(chan struct{}, 50) // Limit to 50 concurrent request batches
-	
+
 	for i := 0; i < len(userIDs); i += batchSize {
 		end := i + batchSize
 		if end > len(userIDs) {
 			end = len(userIDs)
 		}
-		
+
 		batch := userIDs[i:end]
-		
+
 		sem <- struct{}{} // Acquire token
 		go func(users []string) {
 			defer func() { <-sem }() // Release token
-			
+
 			// In production: sending a "multicast" request to FCM/OneSignal is better than loop
 			// For simulation: loop
 			for _, uid := range users {

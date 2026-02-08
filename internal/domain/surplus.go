@@ -7,29 +7,29 @@ import (
 
 // SurplusItem represents the core entity
 type SurplusItem struct {
-	ID                string    `json:"id" validate:"required,uuid"`
-	ProviderID        string    `json:"provider_id" validate:"required"`
-	FoodType          string    `json:"food_type" validate:"required"`
-	QuantityKgs       float64   `json:"quantity_kgs" validate:"required,gt=0"`
-	OriginalPrice     float64   `json:"original_price" validate:"required,gte=0"`
-	DiscountPrice     float64   `json:"discount_price" validate:"required,gte=0"`
-	Status            string    `json:"status" validate:"required,oneof=available claimed expired"`
-	ExpiryTime        time.Time `json:"expiry_time" validate:"required,gt"`
-	Latitude          float64   `json:"lat" validate:"required,latitude"`
-	Longitude         float64   `json:"lon" validate:"required,longitude"`
-	S2CellID          uint64    `json:"s2_cell_id"` // Google S2 Index
-	Version           int64     `json:"version"`     // Optimistic Locking
-	EscrowStatus      string    `json:"escrow_status"` // pending, locked, released
-	CreatedAt         time.Time `json:"created_at"`
-	UpdatedAt         time.Time `json:"updated_at"`
-	NutritionReport   *NutritionReport `json:"nutrition_report,omitempty"`
+	ID              string           `json:"id" validate:"required,uuid"`
+	ProviderID      string           `json:"provider_id" validate:"required"`
+	FoodType        string           `json:"food_type" validate:"required"`
+	QuantityKgs     float64          `json:"quantity_kgs" validate:"required,gt=0"`
+	OriginalPrice   float64          `json:"original_price" validate:"required,gte=0"`
+	DiscountPrice   float64          `json:"discount_price" validate:"required,gte=0"`
+	Status          string           `json:"status" validate:"required,oneof=available claimed expired"`
+	ExpiryTime      time.Time        `json:"expiry_time" validate:"required,gt"`
+	Latitude        float64          `json:"lat" validate:"required,latitude"`
+	Longitude       float64          `json:"lon" validate:"required,longitude"`
+	S2CellID        uint64           `json:"s2_cell_id"`    // Google S2 Index
+	Version         int64            `json:"version"`       // Optimistic Locking
+	EscrowStatus    string           `json:"escrow_status"` // pending, locked, released
+	CreatedAt       time.Time        `json:"created_at"`
+	UpdatedAt       time.Time        `json:"updated_at"`
+	NutritionReport *NutritionReport `json:"nutrition_report,omitempty"`
 }
 
 type NutritionReport struct {
-	Calories      string            `json:"calories"`
+	Calories       string            `json:"calories"`
 	Macronutrients map[string]string `json:"macronutrients"`
-	HealthScore   string            `json:"health_score"`
-	Advice        string            `json:"advice"`
+	HealthScore    string            `json:"health_score"`
+	Advice         string            `json:"advice"`
 }
 
 // SurplusRepository defines the data store contract

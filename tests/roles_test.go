@@ -14,11 +14,11 @@ import (
 
 // Simplified structures for demo
 type DemoSurplus struct {
-	ID          string    `json:"id"`
-	ProviderID  string    `json:"provider_id"`
-	FoodType    string    `json:"food_type"`
-	QuantityKgs float64   `json:"quantity_kgs"`
-	Status      string    `json:"status"`
+	ID          string  `json:"id"`
+	ProviderID  string  `json:"provider_id"`
+	FoodType    string  `json:"food_type"`
+	QuantityKgs float64 `json:"quantity_kgs"`
+	Status      string  `json:"status"`
 }
 
 var (
@@ -28,11 +28,11 @@ var (
 func TestFullWorkflowSimulation(t *testing.T) {
 	// Wait for server to be ready (assuming running in background via cmd/demo/main.go)
 	// In a real test, we would start the server here in a goroutine
-	
+
 	const (
-		NumProviders = 50   // 50 Restaurants posting food
-		NumNGOs      = 100  // 100 NGOs trying to claim
-		NumAdmins    = 5    // 5 Admins monitoring
+		NumProviders = 50  // 50 Restaurants posting food
+		NumNGOs      = 100 // 100 NGOs trying to claim
+		NumAdmins    = 5   // 5 Admins monitoring
 		testDuration = 5 * time.Second
 	)
 
@@ -51,21 +51,21 @@ func TestFullWorkflowSimulation(t *testing.T) {
 	)
 
 	start := time.Now()
-	
+
 	// 1. Providers: Post Surplus continuously
 	for i := 0; i < NumProviders; i++ {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
 			providerID := fmt.Sprintf("P-%d", id)
-			
+
 			for time.Since(start) < testDuration {
 				surplus := DemoSurplus{
 					ProviderID:  providerID,
 					FoodType:    "Nasi Box Premium",
 					QuantityKgs: 10.0,
 				}
-				
+
 				payload, _ := json.Marshal(surplus)
 				resp, err := http.Post(baseURL+"/api/v1/surplus", "application/json", bytes.NewBuffer(payload))
 				if err != nil {
@@ -97,7 +97,7 @@ func TestFullWorkflowSimulation(t *testing.T) {
 					atomic.AddInt64(&totalErrors, 1)
 					continue
 				}
-				
+
 				var items []DemoSurplus
 				_ = json.NewDecoder(resp.Body).Decode(&items)
 				_ = resp.Body.Close()
@@ -107,15 +107,15 @@ func TestFullWorkflowSimulation(t *testing.T) {
 				if len(items) > 0 {
 					target := items[0] // Race condition bait!
 					claimURL := fmt.Sprintf("%s/api/v1/surplus/%s/claim", baseURL, target.ID)
-					
+
 					claimPayload, _ := json.Marshal(map[string]string{
 						"ngo_id": ngoID,
 						"method": "courier",
 					})
-					
+
 					req, _ := http.NewRequest("POST", claimURL, bytes.NewBuffer(claimPayload))
 					cResp, err := http.DefaultClient.Do(req)
-					
+
 					if err == nil {
 						if cResp.StatusCode == 200 {
 							atomic.AddInt64(&totalClaimed, 1)
@@ -160,7 +160,7 @@ func TestFullWorkflowSimulation(t *testing.T) {
 	fmt.Printf("   👀 Total Marketplace Views: %d\n", totalReads)
 	fmt.Printf("   ❌ Errors (Network/Timeout): %d\n", totalErrors)
 	fmt.Printf("   ⚡ Approx Throughput: %.0f req/s\n", float64(totalPosted+totalClaimed+totalReads)/duration.Seconds())
-	
+
 	if totalErrors == 0 {
 		fmt.Println("\n🏆 SYSTEM STABILITY: PERFECT (0 Errors)")
 	} else {
@@ -170,9 +170,11 @@ func TestFullWorkflowSimulation(t *testing.T) {
 
 // Wrapper for simple execution
 func TestRun(t *testing.T) {
-    // Only run if server is up
-    if _, err := http.Get(baseURL + "/api/v1/marketplace"); err != nil {
-        t.Skip("Skipping integration test: server not running")
-    }
-    TestFullWorkflowSimulation(t)
+	// Only run if server is up
+	resp, err := http.Get(baseURL + "/api/v1/marketplace")
+	if err != nil {
+		t.Skip("Skipping integration test: server not running")
+	}
+	defer resp.Body.Close()
+	TestFullWorkflowSimulation(t)
 }

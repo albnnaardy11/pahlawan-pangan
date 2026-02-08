@@ -7,6 +7,7 @@ import (
 	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
 )
 
+// UserRole defines the access level of a user
 type UserRole string
 
 const (
@@ -16,18 +17,19 @@ const (
 	RoleAdmin   UserRole = "ADMIN"
 )
 
+// User represents a system user with authentication and profile data
 type User struct {
-	ID             string    `json:"id"`
-	Email          string    `json:"email"`
-	Phone          string    `json:"phone"`
-	PasswordHash   string    `json:"-"`
-	FullName       string    `json:"full_name"`
-	Role           UserRole  `json:"role"`
-	Status         string    `json:"status"` // ACTIVE, SUSPENDED, PENDING_MFA
-	IsMFAEnabled   bool      `json:"is_mfa_enabled"`
-	LastLogin      time.Time `json:"last_login"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	ID           string    `json:"id"`
+	Email        string    `json:"email"`
+	Phone        string    `json:"phone"`
+	PasswordHash string    `json:"-"`
+	FullName     string    `json:"full_name"`
+	Role         UserRole  `json:"role"`
+	Status       string    `json:"status"` // ACTIVE, SUSPENDED, PENDING_MFA
+	IsMFAEnabled bool      `json:"is_mfa_enabled"`
+	LastLogin    time.Time `json:"last_login"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 // AccountEvent represents an immutable fact in user history (Audit Trail/Fraud Detection)
@@ -41,34 +43,37 @@ type AccountEvent struct {
 	UserAgent string    `json:"user_agent"`
 }
 
+// AuthResponse contains the JWT token and user details after successful login
 type AuthResponse struct {
 	Token string `json:"access_token"`
 	User  User   `json:"user"`
 }
 
+// UserRepository defines the persistence layer for users
 type UserRepository interface {
 	Create(ctx context.Context, user *User) error
 	GetByEmail(ctx context.Context, email string) (*User, error)
 	GetByID(ctx context.Context, id string) (*User, error)
 	GetByIDForUpdate(ctx context.Context, id string) (*User, error)
 	Update(ctx context.Context, user *User) error
-	
+
 	// Transaction & Audit
 	SaveAudit(ctx context.Context, event *AccountEvent) error
-	SaveOutbox(ctx context.Context, event *outbox.OutboxEvent) error
+	SaveOutbox(ctx context.Context, event *outbox.Event) error
 	WithTransaction(ctx context.Context, fn func(repo UserRepository) error) error
 }
 
+// AuthUsecase defines the business logic for authentication and account management
 type AuthUsecase interface {
 	Register(ctx context.Context, user *User, password string) error
 	Login(ctx context.Context, email, password string) (*AuthResponse, error)
 	ValidateToken(ctx context.Context, token string) (*User, error)
 	Logout(ctx context.Context, token string) error
-	
+
 	// MFA/OTP
 	RequestOTP(ctx context.Context, userID string) error
 	VerifyOTP(ctx context.Context, userID, code string) (bool, error)
-	
+
 	// Account Settings (Event Sourced)
 	UpdateEmail(ctx context.Context, userID, newEmail string) error
 	GetAuditTrail(ctx context.Context, userID string) ([]AccountEvent, error)

@@ -10,12 +10,12 @@ import (
 type RecommendationEngine struct{}
 
 type SurplusCandidate struct {
-	ID                string
-	DistanceKm        float64
-	Rating            float64
-	DiscountPercent   float64
-	TemperatureSafe   bool
-	FinalScore        float64
+	ID              string
+	DistanceKm      float64
+	Rating          float64
+	DiscountPercent float64
+	TemperatureSafe bool
+	FinalScore      float64
 }
 
 // RankSurplus uses a multi-factor weighting algorithm similar to Gojek/Grab
@@ -23,7 +23,7 @@ func (e *RecommendationEngine) RankSurplus(candidates []SurplusCandidate) []Surp
 	for i := range candidates {
 		// Weighting: 40% Rating, 30% Proximity, 30% Price Value
 		proximityScore := 1.0 / (candidates[i].DistanceKm + 1.0)
-		
+
 		score := (candidates[i].Rating * 0.4) +
 			(proximityScore * 10.0 * 0.3) + // Normalize proximity
 			((candidates[i].DiscountPercent / 100.0) * 5.0 * 0.3)
@@ -79,10 +79,10 @@ const (
 )
 
 type FulfillmentStatus struct {
-	Method          FulfillmentOption `json:"method"`
-	TrackingID      string            `json:"tracking_id,omitempty"`
-	VerificationCode string           `json:"verification_code,omitempty"`
-	DistanceToStore float64           `json:"distance_to_store_meters"`
+	Method           FulfillmentOption `json:"method"`
+	TrackingID       string            `json:"tracking_id,omitempty"`
+	VerificationCode string            `json:"verification_code,omitempty"`
+	DistanceToStore  float64           `json:"distance_to_store_meters"`
 }
 
 // OrchestrateFulfillment handles the logic for choosing and validating fulfillment methods
@@ -96,7 +96,7 @@ func OrchestrateFulfillment(method FulfillmentOption, userLat, userLon, storeLat
 		if dist > 5.0 {
 			return FulfillmentStatus{}, fmt.Errorf("distance too far for self-pickup: %.2f km", dist)
 		}
-		
+
 		return FulfillmentStatus{
 			Method:           FulfillmentSelfPickup,
 			VerificationCode: "PAH-PICK-77", // Would be generated in real DB
@@ -122,4 +122,3 @@ func calculateHaversine(lat1, lon1, lat2, lon2 float64) float64 {
 	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
 	return R * c
 }
-

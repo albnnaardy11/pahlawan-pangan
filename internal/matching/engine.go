@@ -102,9 +102,9 @@ func (e *MatchingEngine) MatchNGO(ctx context.Context, surplus Surplus, candidat
 		e.workerPool <- struct{}{} // Acquire
 		go func(n NGO) {
 			defer func() { <-e.workerPool }() // Release
-			
+
 			dist, err := e.getDistance(ctx, surplus.Lat, surplus.Lon, n.Lat, n.Lon)
-			
+
 			res := pool.Get().(*matchResult)
 			res.ngo = &n
 			res.distance = dist
@@ -112,7 +112,6 @@ func (e *MatchingEngine) MatchNGO(ctx context.Context, surplus Surplus, candidat
 			resChan <- res
 		}(ngo)
 	}
-
 
 	for i := 0; i < len(candidates); i++ {
 		select {

@@ -1,27 +1,92 @@
 run:
+  concurrency: 4
   timeout: 5m
-  go: "1.24"
+  issue-exit-code: 1
+  tests: true
 
+# 🛡️ Linter Selection: The "Principal Engineer" Suite
 linters:
+  disable-all: true
   enable:
-    - govet
-    - errcheck
-    - staticcheck
-    - unused
-    - gosimple
-    - gosec
-    - ineffassign
-    - typecheck
+    # 1. Zero-Downtime Formatting
+    - gofmt       # Checks if code is gofmt-ed
+    - goimports   # Checks unused imports and implementation of goimports
+
+    # 2. Mechanical Sympathy (Performance)
+    - prealloc    # Finds slice declarations that could potentially be preallocated
+    
+    # 3. Security & Reliability
+    - gosec       # Inspects source code for security problems
+    - errcheck    # Checks for unchecked errors
+    - bodyclose   # Checks whether HTTP response body is closed successfully
+    - staticcheck # Go static analysis, huge set of checks
+    - gosimple    # SImplifies code
+    - unused      # Checks for unused constants, variables, functions and types
+    - ineffassign # Detects when assignments to existing variables are not used
+    - typecheck   # Like the front-end of a Go compiler, parses and type-checks code
+
+    # 4. Code Cleanliness & Architecture
+    - revive      # Fast, configurable, extensible, flexible, and beautiful linter for Go (Drop-in replacement for golint)
+    - misspell    # Finds commonly misspelled English words in comments
+    - gocyclo     # Computes and checks the cyclomatic complexity of functions
+    - dogsled     # Checks assignments with too many blank identifiers (e.g. x, _, _, _, := f())
+    - nakedret    # Finds naked returns in functions greater than a specified function length
 
 linters-settings:
+  gofmt:
+    simplify: true # Simplify code (gofmt -s)
+  
+  goimports:
+    local-prefixes: github.com/albnnaardy11/pahlawan-pangan # Put local imports after 3rd-party groups
+
+  gocyclo:
+    min-complexity: 15 # Keep functions simple (User requested 10-15)
+
+  govet:
+    enable:
+      - fieldalignment # Detects struct field padding (Memory Alignment optimization)
+      - shadow        # Recommended replacement for check-shadowing
+
+  misspell:
+    locale: US # Standardize on US English
+    ignore-words:
+      - pahlawan # Project name
+      - pangan
+
+  revive:
+    severity: warning
+    confidence: 0.8
+    rules:
+      - name: exported
+        severity: warning
+        disabled: false
+        arguments:
+          - "checkPrivateReceivers"
+      - name: package-comments
+        severity: warning
+        disabled: false
+      - name: error-naming
+        severity: warning
+        disabled: false
+      - name: error-strings
+        severity: warning
+        disabled: false
+      - name: receiver-naming
+        severity: warning
+        disabled: false
+      - name: var-naming
+        severity: warning
+        disabled: false
+
   gosec:
-    # To avoid SSA analysis panics in some versions, 
-    # we can exclude certain problematic rules if needed, 
-    # but let's try with default first.
     excludes:
-      - G104 # We handled many, but some might still be noise in demo code
+      - G104 # Duplicate of errcheck (Audit requirement: we use errcheck for this)
 
 issues:
   exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
+  exclude-dirs:
+    - vendor
+    - .git
+    - .github

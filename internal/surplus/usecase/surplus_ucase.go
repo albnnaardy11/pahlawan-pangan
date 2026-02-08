@@ -25,7 +25,7 @@ func NewSurplusUsecase(repo domain.SurplusRepository, engine *matching.MatchingE
 func (u *surplusUsecase) PostSurplus(ctx context.Context, item *domain.SurplusItem) error {
 	ctx, cancel := context.WithTimeout(ctx, u.timeout)
 	defer cancel()
-	
+
 	item.Status = "available"
 	return u.repo.Store(ctx, item)
 }

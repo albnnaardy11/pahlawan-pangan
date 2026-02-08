@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/albnnaardy11/pahlawan-pangan/internal/carbon/service"
 	"github.com/go-chi/chi/v5"
+
+	"github.com/albnnaardy11/pahlawan-pangan/internal/carbon/service"
 )
 
 type CarbonHandler struct {
@@ -23,7 +24,7 @@ func (h *CarbonHandler) GetESGCertificate(w http.ResponseWriter, r *http.Request
 	vendorID := chi.URLParam(r, "vendor_id")
 	yearStr := r.URL.Query().Get("year")
 	year := time.Now().Year() // Default to current year
-	
+
 	if yearStr != "" {
 		if y, err := strconv.Atoi(yearStr); err == nil {
 			year = y

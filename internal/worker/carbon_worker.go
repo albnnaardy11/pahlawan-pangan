@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/albnnaardy11/pahlawan-pangan/internal/carbon/service"
-	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
 	"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
+
+	"github.com/albnnaardy11/pahlawan-pangan/internal/carbon/service"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
 )
 
 // CarbonWorker listens for completed deliveries and records carbon impact
@@ -30,7 +31,7 @@ func (w *CarbonWorker) Start(ctx context.Context) error {
 
 	// Subscribe to delivery completed events
 	_, err := w.nc.Subscribe("delivery.completed", func(m *nats.Msg) {
-		var event outbox.OutboxEvent
+		var event outbox.Event
 		if err := json.Unmarshal(m.Data, &event); err != nil {
 			w.logger.Error("Failed to unmarshal carbon event", zap.Error(err))
 			return
@@ -57,10 +58,10 @@ func (w *CarbonWorker) Start(ctx context.Context) error {
 			return
 		}
 
-		w.logger.Info("✅ Carbon Footprint Recorded", 
+		w.logger.Info("✅ Carbon Footprint Recorded",
 			zap.String("order_id", event.AggregateID),
 			zap.String("hash", hash),
-			zap.Float64("savings_kg", payload.WeightKg * 2.5),
+			zap.Float64("savings_kg", payload.WeightKg*2.5),
 		)
 	})
 

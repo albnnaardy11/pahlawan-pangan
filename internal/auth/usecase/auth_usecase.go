@@ -10,9 +10,6 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/albnnaardy11/pahlawan-pangan/internal/auth/domain"
-	"github.com/albnnaardy11/pahlawan-pangan/internal/messaging"
-	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
@@ -20,12 +17,17 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+
+	"github.com/albnnaardy11/pahlawan-pangan/internal/auth/domain"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/messaging"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
 )
 
 var tracer = otel.Tracer("internal/auth/usecase")
 
 // Zero-allocation string to byte slice conversion
 // WARNING: The returned slice must not be modified.
+// #nosec G103 -- Performance optimization for high-throughput hot paths
 func stringToBytes(s string) []byte {
 	return unsafe.Slice(unsafe.StringData(s), len(s))
 }
@@ -82,7 +84,7 @@ func (u *authUsecase) Register(ctx context.Context, user *domain.User, password 
 		span.SetStatus(codes.Error, "hashing failed")
 		return err
 	}
-	
+
 	user.ID = uuid.New().String()
 	user.PasswordHash = hashed
 	user.CreatedAt = time.Now()
@@ -98,9 +100,8 @@ func (u *authUsecase) Register(ctx context.Context, user *domain.User, password 
 }
 
 func (u *authUsecase) Login(ctx context.Context, email, password string) (*domain.AuthResponse, error) {
-	ctx, span := tracer.Start(ctx, "usecase.login", 
-		// trace.WithAttributes(attribute.String("email", email)), // PII caution
-	)
+	ctx, span := tracer.Start(ctx, "usecase.login") // trace.WithAttributes(attribute.String("email", email)), // PII caution
+
 	defer span.End()
 
 	ctx, cancel := context.WithTimeout(ctx, u.timeout)
@@ -176,9 +177,8 @@ func (u *authUsecase) Logout(ctx context.Context, tokenString string) error {
 }
 
 func (u *authUsecase) RequestOTP(ctx context.Context, userID string) error {
-	ctx, span := tracer.Start(ctx, "usecase.request_otp", 
-		// trace.WithAttributes(attribute.String("user_id", userID)),
-	)
+	ctx, span := tracer.Start(ctx, "usecase.request_otp") // trace.WithAttributes(attribute.String("user_id", userID)),
+
 	defer span.End()
 	span.SetAttributes(attribute.String("user.id", userID))
 
@@ -186,7 +186,7 @@ func (u *authUsecase) RequestOTP(ctx context.Context, userID string) error {
 	code := "123456" // Placeholder: In prod use crypto/rand
 
 	// Store in Redis with 5 min expiry
-	// Note: We use a pipeline for slight perf bump if we were doing multiple ops, 
+	// Note: We use a pipeline for slight perf bump if we were doing multiple ops,
 	// but here single RTT is fine.
 	if err := u.redis.Set(ctx, "otp:"+userID, code, 5*time.Minute).Err(); err != nil {
 		span.RecordError(err)
@@ -203,7 +203,7 @@ func (u *authUsecase) RequestOTP(ctx context.Context, userID string) error {
 		Action string `json:"action"`
 	}{userID, code, "MFA_LOGIN"})
 
-	event := outbox.OutboxEvent{
+	event := outbox.Event{
 		ID:          uuid.New().String(),
 		AggregateID: userID,
 		EventType:   "auth.otp_requested",
@@ -239,7 +239,7 @@ func (u *authUsecase) VerifyOTP(ctx context.Context, userID, code string) (bool,
 	if len(stored) != len(code) {
 		return false, nil
 	}
-	
+
 	match := subtle.ConstantTimeCompare(stringToBytes(stored), stringToBytes(code)) == 1
 	if !match {
 		span.SetAttributes(attribute.Bool("otp.match", false))
@@ -264,7 +264,7 @@ func (u *authUsecase) UpdateEmail(ctx context.Context, userID, newEmail string) 
 		}
 
 		oldEmail := user.Email
-		
+
 		// 1. Save Audit Log (Atomic with update)
 		auditEvent := &domain.AccountEvent{
 			ID:        uuid.New().String(),
@@ -273,7 +273,7 @@ func (u *authUsecase) UpdateEmail(ctx context.Context, userID, newEmail string) 
 			Payload:   fmt.Sprintf("Old: %s, New: %s", oldEmail, newEmail),
 			Timestamp: time.Now(),
 		}
-		
+
 		if err := txRepo.SaveAudit(ctx, auditEvent); err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, "save audit failed")

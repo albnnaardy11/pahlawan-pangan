@@ -8,12 +8,12 @@ import (
 
 // ReconciliationResult stores the outcome of a financial audit.
 type ReconciliationResult struct {
-	Timestamp    time.Time `json:"timestamp"`
-	MainDBTotal  float64   `json:"main_db_total"`
-	EscrowTotal  float64   `json:"escrow_total"`
-	LedgerTotal  float64   `json:"ledger_total"`
-	Discrepancy  float64   `json:"discrepancy"`
-	Status       string    `json:"status"` // balanced, mismatch
+	Timestamp   time.Time `json:"timestamp"`
+	MainDBTotal float64   `json:"main_db_total"`
+	EscrowTotal float64   `json:"escrow_total"`
+	LedgerTotal float64   `json:"ledger_total"`
+	Discrepancy float64   `json:"discrepancy"`
+	Status      string    `json:"status"` // balanced, mismatch
 }
 
 type ReconciliationEngine struct {
@@ -27,7 +27,7 @@ func NewReconciliationEngine() *ReconciliationEngine {
 // RunAudit performs a triple-check between DB, Escrow, and Blockchain.
 func (e *ReconciliationEngine) RunAudit(ctx context.Context) (*ReconciliationResult, error) {
 	fmt.Println("🕵️  [AUDIT] Starting Midnight Reconciliation Engine (Triple-Check)...")
-	
+
 	// Mock: Aggregate values across 287M record scale
 	mainDBTotal := 15400250.00
 	escrowTotal := 15400249.50 // Difference of 0.50!
@@ -41,11 +41,11 @@ func (e *ReconciliationEngine) RunAudit(ctx context.Context) (*ReconciliationRes
 	}
 
 	return &ReconciliationResult{
-		Timestamp:    time.Now(),
-		MainDBTotal:  mainDBTotal,
-		EscrowTotal:  escrowTotal,
-		LedgerTotal:  ledgerTotal,
-		Discrepancy:  discrepancy,
-		Status:       status,
+		Timestamp:   time.Now(),
+		MainDBTotal: mainDBTotal,
+		EscrowTotal: escrowTotal,
+		LedgerTotal: ledgerTotal,
+		Discrepancy: discrepancy,
+		Status:      status,
 	}, nil
 }

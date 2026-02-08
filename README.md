@@ -157,7 +157,3 @@ docker-compose start nats
 ```
 
 ---
-
-<p align="center">
-  <small>Crafted with ❤️ and ☕ by the Pahlawan Pangan Engineering Team.</small>
-</p>

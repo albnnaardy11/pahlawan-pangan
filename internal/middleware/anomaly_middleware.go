@@ -31,7 +31,7 @@ func AnomalyDetectionMiddleware(logger *zap.Logger, next http.Handler) http.Hand
 		start := time.Now()
 
 		// 1. Start Span (initially unsampled/low priority if possible, but OTel sampling happens at start usually)
-		// For tail-based, we often need a custom sampler or collector. 
+		// For tail-based, we often need a custom sampler or collector.
 		// Here we simulate by controlling LOG verbosity and Span Attributes dynamically.
 		ctx, span := tracer.Start(r.Context(), r.URL.Path)
 		defer span.End()
@@ -49,7 +49,7 @@ func AnomalyDetectionMiddleware(logger *zap.Logger, next http.Handler) http.Hand
 
 		// 3. Dynamic Sampling Logic (The "Smart" Part)
 		isAnomaly := false
-		
+
 		// Condition A: Slow Request (> 500ms)
 		if duration > 500*time.Millisecond {
 			isAnomaly = true

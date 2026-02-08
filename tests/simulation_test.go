@@ -34,7 +34,7 @@ func TestScaleSimulation(t *testing.T) {
 
 	// Simulation Parameters
 	const (
-		ConcurrentUsers = 1000 // Number of concurrent users trying to post surplus
+		ConcurrentUsers   = 1000 // Number of concurrent users trying to post surplus
 		CandidatesPerUser = 20   // Number of NGOs to match against per user
 	)
 
@@ -56,15 +56,15 @@ func TestScaleSimulation(t *testing.T) {
 	for i := 0; i < ConcurrentUsers; i++ {
 		go func(id int) {
 			defer wg.Done()
-			
+
 			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second) // 2s global timeout
 			defer cancel()
 
 			surplus := matching.Surplus{
-				ID:          fmt.Sprintf("surplus-%d", id),
-				ProviderID:  fmt.Sprintf("provider-%d", id),
+				ID:         fmt.Sprintf("surplus-%d", id),
+				ProviderID: fmt.Sprintf("provider-%d", id),
 				//nolint:gosec // G404: Using math/rand for test mock coordinates, not cryptographic purposes
-				Lat:         -6.200000 + (rand.Float64() * 0.01),
+				Lat: -6.200000 + (rand.Float64() * 0.01),
 				//nolint:gosec // G404: Using math/rand for test mock coordinates, not cryptographic purposes
 				Lon:         106.816666 + (rand.Float64() * 0.01),
 				ExpiryTime:  time.Now().Add(2 * time.Hour),
@@ -74,7 +74,7 @@ func TestScaleSimulation(t *testing.T) {
 			candidates := make([]matching.NGO, CandidatesPerUser)
 			for j := 0; j < CandidatesPerUser; j++ {
 				candidates[j] = matching.NGO{
-					ID:  fmt.Sprintf("ngo-%d-%d", id, j),
+					ID: fmt.Sprintf("ngo-%d-%d", id, j),
 					//nolint:gosec // G404: Using math/rand for test mock coordinates, not cryptographic purposes
 					Lat: -6.200000 + (rand.Float64() * 0.01),
 					//nolint:gosec // G404: Using math/rand for test mock coordinates, not cryptographic purposes
@@ -117,7 +117,7 @@ func TestScaleSimulation(t *testing.T) {
 	fmt.Printf("   - P99 Latency (Est): %v\n", p99Latency)
 	fmt.Printf("   - Required Throughput: ~100,000,000 req/s (Impossible on single node)\n")
 	fmt.Printf("   - Estimated Cluster Size (1000 req/s per node): 100,000 nodes\n")
-	
+
 	if errorCount > 0 {
 		t.Logf("⚠️ Warning: %d requests failed due to timeouts or errors.", errorCount)
 	}

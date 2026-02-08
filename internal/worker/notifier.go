@@ -5,17 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/nats-io/nats.go"
+	"go.uber.org/zap"
+
 	"github.com/albnnaardy11/pahlawan-pangan/internal/geo"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/notifications"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
-	"github.com/nats-io/nats.go"
-	"go.uber.org/zap"
 )
 
 type SurplusNotifier struct {
-	geoSvc  *geo.GeoService
+	geoSvc   *geo.GeoService
 	notifSvc *notifications.NotificationService
-	logger  *zap.Logger
+	logger   *zap.Logger
 }
 
 func NewSurplusNotifier(geoSvc *geo.GeoService, notifSvc *notifications.NotificationService) *SurplusNotifier {
@@ -30,7 +31,7 @@ func NewSurplusNotifier(geoSvc *geo.GeoService, notifSvc *notifications.Notifica
 func (n *SurplusNotifier) Run(ctx context.Context, nc *nats.Conn) {
 	_, err := nc.Subscribe("surplus.posted", func(msg *nats.Msg) {
 		// Process message
-		var event outbox.OutboxEvent
+		var event outbox.Event
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
 			n.logger.Error("Failed to unmarshal event", zap.Error(err))
 			return
@@ -54,10 +55,10 @@ func (n *SurplusNotifier) Run(ctx context.Context, nc *nats.Conn) {
 func (n *SurplusNotifier) handleSurplusPosted(ctx context.Context, payload json.RawMessage) {
 	// 1. Parse payload to get Surplus Location
 	var data struct {
-		SurplusID   string    `json:"surplus_id"`
-		Lat         float64   `json:"lat"`
-		Lon         float64   `json:"lon"`
-		QuantityKgs float64   `json:"quantity_kgs"`
+		SurplusID   string  `json:"surplus_id"`
+		Lat         float64 `json:"lat"`
+		Lon         float64 `json:"lon"`
+		QuantityKgs float64 `json:"quantity_kgs"`
 	}
 	if err := json.Unmarshal(payload, &data); err != nil {
 		n.logger.Error("Invalid payload", zap.Error(err))
@@ -77,14 +78,14 @@ func (n *SurplusNotifier) handleSurplusPosted(ctx context.Context, payload json.
 		return
 	}
 
-	n.logger.Info("Found nearby users", 
-		zap.Int("count", len(userIDs)), 
+	n.logger.Info("Found nearby users",
+		zap.Int("count", len(userIDs)),
 		zap.String("surplus_id", data.SurplusID))
 
 	// 3. Batch Notify (Fan-out)
 	title := "Free Food Nearby! 🍱"
 	message := fmt.Sprintf("%.1f kg available within 500m of you!", data.QuantityKgs)
-	
+
 	err = n.notifSvc.NotifyBatch(ctx, userIDs, title, message)
 	if err != nil {
 		n.logger.Error("Failed to send notifications", zap.Error(err))

@@ -28,10 +28,10 @@ type EscrowEvent struct {
 }
 
 type EscrowState struct {
-	OrderID      string
-	TotalLocked  float64
-	Status       string
-	LastUpdated  time.Time
+	OrderID     string
+	TotalLocked float64
+	Status      string
+	LastUpdated time.Time
 }
 
 // Repository defines the contract for storing events (Event Store)

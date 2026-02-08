@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/albnnaardy11/pahlawan-pangan/internal/logistics/domain"
 	"github.com/google/uuid"
+
+	"github.com/albnnaardy11/pahlawan-pangan/internal/logistics/domain"
 )
 
 type DispatchService struct {
@@ -71,7 +72,7 @@ func (s *DispatchService) RunBatchProcessor(ctx context.Context) {
 			// Calculate Optimal Batches
 			// Mock courier location for simplicity
 			// courierLoc := s2.LatLngFromDegrees(-6.2, 106.8)
-			
+
 			// result, _ := s.batchEngine.CalculateOptimalBatch(ctx, s.pendingOrders, courierLoc)
 			// Assign batches...
 		}

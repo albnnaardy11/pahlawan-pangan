@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
 	"github.com/segmentio/encoding/json"
+
+	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
 )
 
 // RematchWorker orchestrates the re-routing of surplus
@@ -29,7 +30,7 @@ type SurplusRepository struct {
 }
 
 // HandleRematchEvent processes a RematchRequired event
-func (w *RematchWorker) HandleRematchEvent(ctx context.Context, event outbox.OutboxEvent) error {
+func (w *RematchWorker) HandleRematchEvent(ctx context.Context, event outbox.Event) error {
 	var payload struct {
 		SurplusID    string   `json:"surplus_id"`
 		ExcludedNGOs []string `json:"excluded_ngos"`

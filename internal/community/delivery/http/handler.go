@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/albnnaardy11/pahlawan-pangan/internal/community/domain"
 	"github.com/go-chi/chi/v5"
+
+	"github.com/albnnaardy11/pahlawan-pangan/internal/community/domain"
 )
 
 type CommunityHandler struct {

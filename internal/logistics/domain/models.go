@@ -18,20 +18,20 @@ const (
 
 // Order represents a delivery request
 type Order struct {
-	ID           string
-	UserID       string
-	ProviderID   string
-	PickupLat    float64
-	PickupLon    float64
-	DropoffLat   float64
-	DropoffLon   float64
-	ExpiryTime   time.Time
-	QuantityKg   float64
-	SelectedSLA  DeliverySLA
-	CurrentSLA   DeliverySLA // Can be upgraded by the system
-	Status       string
-	BatchID      *string
-	CreatedAt    time.Time
+	ID          string
+	UserID      string
+	ProviderID  string
+	PickupLat   float64
+	PickupLon   float64
+	DropoffLat  float64
+	DropoffLon  float64
+	ExpiryTime  time.Time
+	QuantityKg  float64
+	SelectedSLA DeliverySLA
+	CurrentSLA  DeliverySLA // Can be upgraded by the system
+	Status      string
+	BatchID     *string
+	CreatedAt   time.Time
 }
 
 // Batch represents a grouped set of orders for optimal routing

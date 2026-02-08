@@ -23,9 +23,9 @@ func TestHyperScaleEngine(t *testing.T) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	const (
-		TotalMatches     = 100000 // Total match requests
-		ConcurrentCalls  = 5000   // Concurrent match requests at any time
-		CandidatesPerMatch = 20    // Number of NGOs per match
+		TotalMatches       = 100000 // Total match requests
+		ConcurrentCalls    = 5000   // Concurrent match requests at any time
+		CandidatesPerMatch = 20     // Number of NGOs per match
 	)
 
 	router := &HyperScaleMockRouter{}
@@ -81,11 +81,11 @@ func TestHyperScaleEngine(t *testing.T) {
 	fmt.Printf("   🚄 Matches/Sec: %.0f\n", throughput)
 	fmt.Printf("   🔍 Total NGO Evaluations: %d\n", totalEvaluations)
 	fmt.Printf("   💨 Evaluations/Sec: %.0f\n", evalThroughput)
-	
+
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
-	fmt.Printf("   🧠 Final Heap Alloc: %v MB\n", m.Alloc / 1024 / 1024)
+	fmt.Printf("   🧠 Final Heap Alloc: %v MB\n", m.Alloc/1024/1024)
 	fmt.Printf("   🧹 Total GC Cycles: %v\n", m.NumGC)
-	
+
 	fmt.Printf("\n⭐ SRE EVALUATION: %s\n", map[bool]string{true: "GO-NASHIONAL READY! 🇮🇩", false: "STABLE"}[throughput > 5000])
 }

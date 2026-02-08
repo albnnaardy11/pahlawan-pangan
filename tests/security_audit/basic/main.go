@@ -56,7 +56,7 @@ func main() {
 		defer wg.Done()
 		time.Sleep(500 * time.Millisecond) // Wait for Flood to stabilize
 		fmt.Println("\n💉 [ATTACK] Injecting SQL Payload in Parameters...")
-		
+
 		// Payload: ' OR '1'='1
 		sqliURL := baseURL + "/marketplace?lat=-6.2&lon=106.8' OR '1'='1"
 		resp, err := http.Get(sqliURL)
@@ -65,7 +65,7 @@ func main() {
 			return
 		}
 		defer resp.Body.Close()
-		
+
 		body, _ := io.ReadAll(resp.Body)
 		if strings.Contains(string(body), "postgres") || strings.Contains(string(body), "syntax error") {
 			fmt.Println("   -> ❌ VULNERABLE! Database error leaked in response.")
@@ -83,11 +83,11 @@ func main() {
 		defer wg.Done()
 		time.Sleep(1 * time.Second)
 		fmt.Println("\n🐵 [ATTACK] Triggering Chaos Monkey (Simulated Network Failure)...")
-		
+
 		req, _ := http.NewRequest("GET", baseURL+"/marketplace?lat=-6.2&lon=106.8", nil)
 		req.Header.Set("X-Chaos-Simulate", "true")
 		req.Header.Set("X-Chaos-Failure-Rate", "1.0") // 100% Failure Rate
-		
+
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
@@ -95,14 +95,14 @@ func main() {
 			return
 		}
 		defer resp.Body.Close()
-		
+
 		if resp.StatusCode == 500 {
 			fmt.Println("   -> ✅ RESILIENCE VERIFIED. Ops/SRE alerts should be firing now.")
 		} else {
 			fmt.Printf("   -> ❌ Chaos Failed. Status: %d\n", resp.StatusCode)
 		}
 	}()
-	
+
 	// 4. XSS / SCRIPT INJECTION (Input Sanitization)
 	// Attempt to store a script in a text field (e.g., surplus food_type)
 	wg.Add(1)
@@ -110,7 +110,7 @@ func main() {
 		defer wg.Done()
 		time.Sleep(1500 * time.Millisecond)
 		fmt.Println("\n🦠 [ATTACK] Attempting Stored XSS Injection...")
-		
+
 		payload := map[string]interface{}{
 			"id":             "xss-test-1",
 			"provider_id":    "hacker-001",
@@ -124,14 +124,14 @@ func main() {
 			"lon":            106.8,
 		}
 		jsonPayload, _ := json.Marshal(payload)
-		
+
 		resp, err := http.Post(baseURL+"/surplus", "application/json", bytes.NewBuffer(jsonPayload))
 		if err != nil {
 			fmt.Printf("   -> [ERROR] Connection failed: %v\n", err)
 			return
 		}
 		defer resp.Body.Close()
-		
+
 		if resp.StatusCode == 422 || resp.StatusCode == 400 {
 			fmt.Println("   -> ✅ SAFE. Input validation blocked the payload.")
 		} else if resp.StatusCode == 201 {

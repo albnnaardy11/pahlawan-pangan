@@ -36,13 +36,13 @@ func TestChaosSimulation(t *testing.T) {
 	// 2. Scenario: Primary Matcher is DOWN
 	fmt.Println("🔥 SCENARIO 1: Primary Database Instance is DOWN")
 	fmt.Println("   Action: Attempting to match NGO while database link is severed...")
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
 	// No candidates or broken candidates
 	result, err := engine.MatchNGO(ctx, surplus, []matching.NGO{})
-	
+
 	if err != nil {
 		t.Errorf("Chaos Test Failed: Engine should NOT return error during outage, it should use FALLBACK. Got error: %v", err)
 	}
@@ -57,10 +57,10 @@ func TestChaosSimulation(t *testing.T) {
 	// 3. Scenario: Partial Recovery
 	fmt.Println("\n🔄 SCENARIO 2: Partial Recovery (Restoring DB Link)")
 	router.shouldFail = false
-	
+
 	candidates := []matching.NGO{{ID: "NGO-PRO-001", Lat: -6.124, Lon: 106.457}}
 	result, _ = engine.MatchNGO(ctx, surplus, candidates)
-	
+
 	if result.ID == "NGO-PRO-001" {
 		fmt.Printf("✅ RECOVERY SUCCESS: System returned to primary logic. Found: [%s]\n", result.ID)
 	}

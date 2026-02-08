@@ -17,10 +17,10 @@ type UserImpact struct {
 }
 
 type GlobalLeaderboard struct {
-	Region    string       `json:"region"`
-	Rankings  []UserImpact `json:"rankings"`
-	TopCity   string       `json:"top_city"`
-	TotalCO2  float64      `json:"total_national_co2_saved"`
+	Region   string       `json:"region"`
+	Rankings []UserImpact `json:"rankings"`
+	TopCity  string       `json:"top_city"`
+	TotalCO2 float64      `json:"total_national_co2_saved"`
 }
 
 type ImpactUsecase interface {

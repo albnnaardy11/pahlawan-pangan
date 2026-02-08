@@ -63,9 +63,9 @@ func (r *reviewRepository) GetSummary(ctx context.Context, targetID string) (dom
 		FROM reviews 
 		WHERE target_id = $1
 	`, targetID).Scan(&summary.AverageRating, &summary.TotalReviews)
-	
+
 	summary.TargetID = targetID
 	summary.TopTags = []string{"Trusted", "Quick Response"} // Mock tags specific to vendor (can be dynamic later)
-	
+
 	return summary, err
 }

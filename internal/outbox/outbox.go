@@ -22,11 +22,11 @@ const (
 	SurplusExpired  EventType = "surplus.expired"
 	RematchRequired EventType = "surplus.rematch_required"
 	FoodDelivered   EventType = "delivery.completed"
-	FundsReleased    EventType = "escrow.funds_released"
+	FundsReleased   EventType = "escrow.funds_released"
 )
 
-// OutboxEvent represents an event to be published
-type OutboxEvent struct {
+// Event represents an event to be published
+type Event struct {
 	ID          string          `json:"id"`
 	AggregateID string          `json:"aggregate_id"` // surplus_id or ngo_id
 	EventType   EventType       `json:"event_type"`
@@ -37,17 +37,18 @@ type OutboxEvent struct {
 	TraceID     string          `json:"trace_id"`
 }
 
-// OutboxService handles transactional outbox pattern
-type OutboxService struct {
+// Service handles transactional outbox pattern
+type Service struct {
 	db *sql.DB
 }
 
-func NewOutboxService(db *sql.DB) *OutboxService {
-	return &OutboxService{db: db}
+// NewOutboxService creates a new instance of the outbox service
+func NewOutboxService(db *sql.DB) *Service {
+	return &Service{db: db}
 }
 
 // PublishWithTransaction atomically writes to DB and outbox
-func (s *OutboxService) PublishWithTransaction(ctx context.Context, tx *sql.Tx, event OutboxEvent) error {
+func (s *Service) PublishWithTransaction(ctx context.Context, tx *sql.Tx, event Event) error {
 	ctx, span := tracer.Start(ctx, "PublishWithTransaction")
 	defer span.End()
 
@@ -81,7 +82,7 @@ func (s *OutboxService) PublishWithTransaction(ctx context.Context, tx *sql.Tx, 
 }
 
 // PollAndPublish reads unpublished events and sends to message broker
-func (s *OutboxService) PollAndPublish(ctx context.Context, publisher MessagePublisher, batchSize int) error {
+func (s *Service) PollAndPublish(ctx context.Context, publisher Publisher, batchSize int) error {
 	ctx, span := tracer.Start(ctx, "PollAndPublish")
 	defer span.End()
 
@@ -106,9 +107,9 @@ func (s *OutboxService) PollAndPublish(ctx context.Context, publisher MessagePub
 	}()
 
 	// Pre-allocate slice to avoid resizing overhead (Mechanical Sympathy)
-	events := make([]OutboxEvent, 0, batchSize)
+	events := make([]Event, 0, batchSize)
 	for rows.Next() {
-		var event OutboxEvent
+		var event Event
 		err := rows.Scan(
 			&event.ID,
 			&event.AggregateID,
@@ -136,14 +137,14 @@ func (s *OutboxService) PollAndPublish(ctx context.Context, publisher MessagePub
 				attribute.String("event.type", string(event.EventType)),
 				attribute.String("event.age", time.Since(event.CreatedAt).String()),
 			))
-			
+
 			// Mark as "published" (effectively ignored) to prevent reprocessing loop
 			_, err := s.db.ExecContext(ctx, `
 				UPDATE outbox_events 
 				SET published = true, published_at = $1 
 				WHERE id = $2
 			`, time.Now(), event.ID)
-			
+
 			if err != nil {
 				span.RecordError(err)
 			}
@@ -173,7 +174,7 @@ func (s *OutboxService) PollAndPublish(ctx context.Context, publisher MessagePub
 	return nil
 }
 
-// MessagePublisher interface for NATS/Kafka abstraction
-type MessagePublisher interface {
-	Publish(ctx context.Context, event OutboxEvent) error
+// Publisher interface for NATS/Kafka abstraction
+type Publisher interface {
+	Publish(ctx context.Context, event Event) error
 }

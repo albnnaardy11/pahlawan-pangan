@@ -23,13 +23,13 @@ func main() {
 	claims["sub"] = "admin-user-id"
 	claims["role"] = "ADMIN"
 	claims["exp"] = time.Now().Add(1 * time.Hour).Unix()
-	
+
 	// Create unsigned token
 	unsignedToken, _ := token.SignedString(jwt.UnsafeAllowNoneSignatureType)
-	
+
 	req, _ := http.NewRequest("GET", baseURL+"/surplus/marketplace", nil)
 	req.Header.Set("Authorization", "Bearer "+unsignedToken)
-	
+
 	resp, err := http.DefaultClient.Do(req)
 	if err == nil {
 		if resp.StatusCode == 200 {
@@ -45,7 +45,7 @@ func main() {
 	// Scenario: User A tries to access User B's impact data
 	// We need a valid token first (assuming we have one for 'User A')
 	// For this test, we simulate the request Assuming we stole a token or are a valid user
-	
+
 	// Check Endpoint: /api/v1/impact/user/{id}
 	// Try to access ID: "super-admin-id"
 	reqBOLA, _ := http.NewRequest("GET", baseURL+"/impact/user/super-admin-id", nil)
@@ -65,7 +65,7 @@ func main() {
 	fmt.Println("\n🌪️ [ATTACK] API Fuzzing (Malformed JSON & Large Payloads)...")
 	largeData := strings.Repeat("A", 10000) // 10KB payload
 	fuzzBody := fmt.Sprintf(`{"id": "%s", "email": "hacker@test.com"}`, largeData)
-	
+
 	respFuzz, err := http.Post(baseURL+"/auth/login", "application/json", strings.NewReader(fuzzBody))
 	if err == nil {
 		if respFuzz.StatusCode == 500 {

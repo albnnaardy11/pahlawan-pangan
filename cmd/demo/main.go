@@ -9,12 +9,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/albnnaardy11/pahlawan-pangan/internal/fintech"
-	"github.com/albnnaardy11/pahlawan-pangan/internal/geo"
-	"github.com/albnnaardy11/pahlawan-pangan/pkg/utils"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"
+
+	"github.com/albnnaardy11/pahlawan-pangan/internal/fintech"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/geo"
+	"github.com/albnnaardy11/pahlawan-pangan/pkg/utils"
 )
 
 // In-Memory Storage
@@ -78,9 +79,9 @@ func main() {
 
 func PostSurplus(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		ProviderID  string    `json:"provider_id"`
-		FoodType    string    `json:"food_type"`
-		QuantityKgs float64   `json:"quantity_kgs"`
+		ProviderID  string  `json:"provider_id"`
+		FoodType    string  `json:"food_type"`
+		QuantityKgs float64 `json:"quantity_kgs"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -107,10 +108,10 @@ func PostSurplus(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
-		"id":         item.ID,
-		"status":     "posted",
-		"geo_index":  fmt.Sprintf("S2-Cell-%d", s2ID), // Scalable Indexing
-		"message":    "Surplus indexed using Google S2 Geometry",
+		"id":        item.ID,
+		"status":    "posted",
+		"geo_index": fmt.Sprintf("S2-Cell-%d", s2ID), // Scalable Indexing
+		"message":   "Surplus indexed using Google S2 Geometry",
 	})
 }
 
@@ -124,14 +125,14 @@ func ListSurplus(w http.ResponseWriter, r *http.Request) {
 			items = append(items, item)
 		}
 	}
-	
+
 	// Seed some dummy data if empty
 	if len(items) == 0 {
 		items = append(items, SurplusItem{
-			ID: uuid.New().String(), ProviderID: "Starbucks-Kemang", FoodType: "Pastry Box", QuantityKgs: 5.0, Status: "available", ExpiryTime: time.Now().Add(5*time.Hour),
+			ID: uuid.New().String(), ProviderID: "Starbucks-Kemang", FoodType: "Pastry Box", QuantityKgs: 5.0, Status: "available", ExpiryTime: time.Now().Add(5 * time.Hour),
 		})
 		items = append(items, SurplusItem{
-			ID: uuid.New().String(), ProviderID: "Padang-Sederhana", FoodType: "Nasi Box", QuantityKgs: 15.0, Status: "available", ExpiryTime: time.Now().Add(2*time.Hour),
+			ID: uuid.New().String(), ProviderID: "Padang-Sederhana", FoodType: "Nasi Box", QuantityKgs: 15.0, Status: "available", ExpiryTime: time.Now().Add(2 * time.Hour),
 		})
 	}
 
@@ -147,7 +148,7 @@ func ClaimSurplus(w http.ResponseWriter, r *http.Request) {
 	item, exists := surplusDB[id]
 	if !exists {
 		// Mock claim for seeded data
-		item = SurplusItem{ID: id, Status: "available"} 
+		item = SurplusItem{ID: id, Status: "available"}
 	}
 
 	if item.Status != "available" {
@@ -172,8 +173,8 @@ func ClaimSurplus(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"status": "claimed",
 		"fulfillment": map[string]string{
-			"method": "courier",
-			"eta": "15 mins",
+			"method":  "courier",
+			"eta":     "15 mins",
 			"courier": "Pahlawan-Express Driver #402",
 		},
 		"escrow": map[string]interface{}{
@@ -214,10 +215,10 @@ func VerifyBlockchainImpact(w http.ResponseWriter, r *http.Request) {
 func GenerateShareCard(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
-		"share_url": fmt.Sprintf("https://pahlawanpangan.org/v/card-%s.png", id),
-		"og_title":  "Saya baru saja menyelamatkan 2kg Makanan!",
+		"share_url":      fmt.Sprintf("https://pahlawanpangan.org/v/card-%s.png", id),
+		"og_title":       "Saya baru saja menyelamatkan 2kg Makanan!",
 		"og_description": "Bergabunglah menjadi pahlawan dan cegah 5kg Emisi CO2 hari ini.",
-		"cta": "Download Apps Sekarang!",
+		"cta":            "Download Apps Sekarang!",
 	})
 }
 
@@ -228,7 +229,7 @@ func GetNationalLeaderboard(w http.ResponseWriter, r *http.Request) {
 			{"city": "Jakarta", "total_saved_kgs": 43902, "rank": 2},
 			{"city": "Surabaya", "total_saved_kgs": 38112, "rank": 3},
 		},
-		"top_merchants": []string{"Hotel Mulia", "Bakmi GM", "Starbucks Indo"},
+		"top_merchants":   []string{"Hotel Mulia", "Bakmi GM", "Starbucks Indo"},
 		"national_impact": "1.2 Million Kgs of Food Saved in 2026",
 	})
 }
@@ -243,9 +244,9 @@ func PlaceAuctionBid(w http.ResponseWriter, r *http.Request) {
 func RaiseDispute(w http.ResponseWriter, r *http.Request) {
 	traceID := uuid.New().String() // OpenTelemetry Propagation simulation
 	w.Header().Set("X-Trace-ID", traceID)
-	
+
 	fmt.Printf("🔍 [OBSERVABILITY] Trace ID: %s - Processing Dispute...\n", traceID)
-	
+
 	// PII Masking Simulation
 	email := "budi.pahlawan@gmail.com"
 	maskedEmail := utils.MaskPII(email)

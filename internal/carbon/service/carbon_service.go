@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/albnnaardy11/pahlawan-pangan/internal/carbon/domain"
 	"github.com/google/uuid"
+
+	"github.com/albnnaardy11/pahlawan-pangan/internal/carbon/domain"
 )
 
 type CarbonService struct {
@@ -29,12 +30,12 @@ func NewCarbonService(repo CarbonRepo) *CarbonService {
 // RecordSavings adds a new block to the carbon ledger
 func (s *CarbonService) RecordSavings(ctx context.Context, vendorID, orderID, category string, weightKg float64) (string, error) {
 	savings := domain.CalculateSavings(weightKg, category)
-	
+
 	prevHash, err := s.repo.GetLastHash(ctx)
 	if err != nil {
 		prevHash = "0000000000000000"
 	}
-	
+
 	entry := domain.CarbonEntry{
 		ID:            uuid.New().String(),
 		VendorID:      vendorID,
@@ -45,13 +46,13 @@ func (s *CarbonService) RecordSavings(ctx context.Context, vendorID, orderID, ca
 		Timestamp:     time.Now(),
 		PreviousHash:  prevHash,
 	}
-	
+
 	entry.Hash = entry.ComputeHash()
-	
+
 	if err := s.repo.Save(ctx, entry); err != nil {
 		return "", err
 	}
-	
+
 	return entry.Hash, nil
 }
 
@@ -64,13 +65,13 @@ func (s *CarbonService) GenerateESGReport(ctx context.Context, vendorID string, 
 	if err != nil {
 		return domain.ESGReport{}, err
 	}
-	
+
 	var totalFood, totalCarbon float64
 	for _, entry := range entries {
 		totalFood += entry.WeightKg
 		totalCarbon += entry.CarbonSavedKg
 	}
-	
+
 	if len(entries) == 0 {
 		return domain.ESGReport{}, fmt.Errorf("no transactions found for vendor %s in %d", vendorID, year)
 	}
@@ -84,6 +85,6 @@ func (s *CarbonService) GenerateESGReport(ctx context.Context, vendorID string, 
 		TransactionCount: len(entries),
 		VerificationHash: fmt.Sprintf("VERIFIED-%s-%d-%f", vendorID, year, totalCarbon),
 	}
-	
+
 	return report, nil
 }

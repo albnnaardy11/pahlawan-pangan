@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/albnnaardy11/pahlawan-pangan/internal/logistics/domain"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/logistics/service"
-	"github.com/go-chi/chi/v5"
 )
 
 type LogisticsHandler struct {
@@ -64,7 +65,7 @@ func (h *LogisticsHandler) GetCourierItinerary(w http.ResponseWriter, r *http.Re
 	// Mock implementation for demo
 	// In production: Query assigned Batch from Redis
 	courierID := chi.URLParam(r, "id")
-	
+
 	itinerary := []map[string]interface{}{
 		{"seq": 1, "type": "PICKUP", "loc": "Mall A", "eta": "10:00"},
 		{"seq": 2, "type": "PICKUP", "loc": "Bakery B", "eta": "10:15"}, // Optimization: 2 Pickups

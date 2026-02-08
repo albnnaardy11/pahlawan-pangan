@@ -7,13 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/albnnaardy11/pahlawan-pangan/internal/api/middleware"
-	"github.com/albnnaardy11/pahlawan-pangan/internal/inventory"
-	"github.com/albnnaardy11/pahlawan-pangan/internal/loyalty"
-	"github.com/albnnaardy11/pahlawan-pangan/internal/matching"
-	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
-	"github.com/albnnaardy11/pahlawan-pangan/internal/recommendation"
-	"github.com/albnnaardy11/pahlawan-pangan/internal/trust"
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -23,29 +16,40 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/time/rate"
+
+	"github.com/albnnaardy11/pahlawan-pangan/internal/api/middleware"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/inventory"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/loyalty"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/matching"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/recommendation"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/trust"
 )
 
 var tracer = otel.Tracer("api-handler")
 
+// Handler serves as the central orchestration point for API requests.
+// It integrates various services and middleware to provide a robust API.
 type Handler struct {
 	db            *sql.DB
 	matchEngine   *matching.MatchingEngine
-	outboxService *outbox.OutboxService
-	
-	// Unicorn Features
-	loyaltySvc    *loyalty.LoyaltyService
-	inventorySvc  *inventory.InventoryService
-	trustSvc      *trust.TrustService
-	recSvc        *recommendation.RecommendationService
+	outboxService *outbox.Service
 
-	limiter       *middleware.IPLimiter        // SRE-Guard
-	loadshedder   *middleware.AdaptiveLoadShedder // Damage Control
+	// Unicorn Features
+	loyaltySvc   *loyalty.LoyaltyService
+	inventorySvc *inventory.InventoryService
+	trustSvc     *trust.TrustService
+	recSvc       *recommendation.RecommendationService
+
+	limiter     *middleware.IPLimiter           // SRE-Guard
+	loadshedder *middleware.AdaptiveLoadShedder // Damage Control
 }
 
+// NewHandler creates a new instance of the API handler with all required dependencies.
 func NewHandler(
-	db *sql.DB, 
-	engine *matching.MatchingEngine, 
-	outbox *outbox.OutboxService,
+	db *sql.DB,
+	engine *matching.MatchingEngine,
+	outboxSvc *outbox.Service,
 	loyaltySvc *loyalty.LoyaltyService,
 	inventorySvc *inventory.InventoryService,
 	trustSvc *trust.TrustService,
@@ -54,7 +58,7 @@ func NewHandler(
 	return &Handler{
 		db:            db,
 		matchEngine:   engine,
-		outboxService: outbox,
+		outboxService: outboxSvc,
 		loyaltySvc:    loyaltySvc,
 		inventorySvc:  inventorySvc,
 		trustSvc:      trustSvc,
@@ -73,7 +77,7 @@ func (h *Handler) Routes() http.Handler {
 	r.Use(chiMiddleware.Timeout(5 * time.Second))
 	r.Use(middleware.LimitByIP(h.limiter))
 	r.Use(h.loadshedder.Handle) // Adaptive Load Shedding (Netflix Style)
-	
+
 	// Canary Deployment Indicator
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -130,23 +134,23 @@ func (h *Handler) Routes() http.Handler {
 
 		// Merchant Dashboard (Provider-specific)
 		r.Route("/merchant", func(r chi.Router) {
-			r.Get("/claims", h.GetProviderClaims) // List all claims for this provider
+			r.Get("/claims", h.GetProviderClaims)        // List all claims for this provider
 			r.Post("/verify-pickup", h.VerifyPickupCode) // Scan/Verify QR code
-			r.Get("/analytics", h.GetProviderROI) // Integrated ROI analytics
+			r.Get("/analytics", h.GetProviderROI)        // Integrated ROI analytics
 		})
 
 		// NGO endpoints
 		r.Get("/ngos/nearby", h.GetNearbyNGOs)
 
-	// --- UNICORN PHASE 3: AI, BLOCKCHAIN & AUCTION ---
-		r.Post("/surplus/analyze-image", h.AnalyzeFoodImage)      // Pahlawan-Scan
-		r.Get("/impact/verify/{id}", h.VerifyBlockchainImpact)    // Pahlawan-Trust
-		r.Post("/marketplace/auction/bid", h.PlaceAuctionBid)    // Pahlawan-Auction
+		// --- UNICORN PHASE 3: AI, BLOCKCHAIN & AUCTION ---
+		r.Post("/surplus/analyze-image", h.AnalyzeFoodImage)   // Pahlawan-Scan
+		r.Get("/impact/verify/{id}", h.VerifyBlockchainImpact) // Pahlawan-Trust
+		r.Post("/marketplace/auction/bid", h.PlaceAuctionBid)  // Pahlawan-Auction
 
 		// --- PHASE 4: LOYALTY, INVENTORY & TRUST ---
-		r.Get("/leaderboard", h.GetLeaderboard)                   // Loyalty Engine
-		r.Post("/webhooks/inventory", h.HandleInventoryWebhook)   // POS Integration
-		r.Get("/users/{id}/score", h.GetUserScore)                // Social Credit Score
+		r.Get("/leaderboard", h.GetLeaderboard)                 // Loyalty Engine
+		r.Post("/webhooks/inventory", h.HandleInventoryWebhook) // POS Integration
+		r.Get("/users/{id}/score", h.GetUserScore)              // Social Credit Score
 
 		// --- PHASE 5: PERSONALIZATION ---
 		r.Get("/users/{id}/recommendations", h.GetSmartNudges)
@@ -218,7 +222,7 @@ func (h *Handler) PostSurplus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	event := outbox.OutboxEvent{
+	event := outbox.Event{
 		ID:          uuid.New().String(),
 		AggregateID: surplusID,
 		EventType:   outbox.SurplusPosted,
@@ -276,7 +280,7 @@ func (h *Handler) ClaimSurplus(w http.ResponseWriter, r *http.Request) {
 	// Complex Orchestration: Logistics vs Self-Pickup
 	// Note: In real app, fetch storeLat/Lon from DB using surplusID
 	storeLat, storeLon := -6.2, 106.8 // Mock coords for Jakarta
-	
+
 	fOption := matching.FulfillmentOption(req.FulfillmentMethod)
 	fStatus, err := matching.OrchestrateFulfillment(fOption, req.UserLat, req.UserLon, storeLat, storeLon)
 	if err != nil {
@@ -325,7 +329,6 @@ func (h *Handler) ClaimSurplus(w http.ResponseWriter, r *http.Request) {
 		"fulfillment": fStatus,
 	})
 }
-
 
 // BrowseSurplus allows general citizens to find cheap food (B2C Unicorn feature)
 func (h *Handler) BrowseSurplus(w http.ResponseWriter, r *http.Request) {
@@ -603,7 +606,7 @@ func (h *Handler) GetProviderClaims(w http.ResponseWriter, r *http.Request) {
 	// Logic to list all active/completed claims for the logged-in provider
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
-		"active_claims":    5,
+		"active_claims":   5,
 		"completed_today": 12,
 	})
 }
@@ -662,9 +665,9 @@ func (h *Handler) AnalyzeFoodImage(w http.ResponseWriter, r *http.Request) {
 
 	// Advanced simulation of a Nutritionist Vision Pipeline
 	res := map[string]interface{}{
-		"ai_model":          "Pahlawan-Vision-v3.0-Nutritionist-Pro",
-		"status":            "ANALYSIS_COMPLETE",
-		"overall_safety":    "OPTIMAL",
+		"ai_model":       "Pahlawan-Vision-v3.0-Nutritionist-Pro",
+		"status":         "ANALYSIS_COMPLETE",
+		"overall_safety": "OPTIMAL",
 		"nutritional_profile": map[string]interface{}{
 			"estimated_calories": "450 kcal",
 			"macronutrients": map[string]interface{}{
@@ -678,10 +681,10 @@ func (h *Handler) AnalyzeFoodImage(w http.ResponseWriter, r *http.Request) {
 			"sodium_level":   "Low",
 		},
 		"health_metrics": map[string]interface{}{
-			"nutri_score": "A",
+			"nutri_score":   "A",
 			"dietary_flags": []string{"High Protein", "Low Sodium", "Halal Certified"},
 		},
-		"ahli_gizi_advice": "Pilihan makanan ini sangat seimbang. Mengandung protein tinggi yang baik untuk pemulihan otot dan serat yang cukup untuk kesehatan pencernaan. Cocok untuk konsumsi makan siang yang memberikan energi stabil.",
+		"ahli_gizi_advice":     "Pilihan makanan ini sangat seimbang. Mengandung protein tinggi yang baik untuk pemulihan otot dan serat yang cukup untuk kesehatan pencernaan. Cocok untuk konsumsi makan siang yang memberikan energi stabil.",
 		"detected_ingredients": []string{"Grilled Chicken", "Quinoa", "Steamed Broccoli", "Roasted Sweet Potato"},
 		"processing_time_ms":   185,
 	}
@@ -689,8 +692,6 @@ func (h *Handler) AnalyzeFoodImage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(res)
 }
-
-
 
 // VerifyBlockchainImpact (Pahlawan-Trust) - Immutable Transparency Ledger
 func (h *Handler) VerifyBlockchainImpact(w http.ResponseWriter, r *http.Request) {
@@ -800,7 +801,7 @@ func (h *Handler) GetUserScore(w http.ResponseWriter, r *http.Request) {
 		AccountAgeDays:    120,
 		VerifiedIdentity:  true,
 	}
-	
+
 	score := h.trustSvc.CalculateScore(r.Context(), factors)
 	level := h.trustSvc.GetTrustLevel(score)
 
@@ -824,7 +825,7 @@ func (h *Handler) GetSmartNudges(w http.ResponseWriter, r *http.Request) {
 	defer span.End()
 
 	userID := chi.URLParam(r, "id")
-	
+
 	// Mock location (e.g., from header or previous ping)
 	lat := -6.200
 	lon := 106.816
@@ -839,6 +840,3 @@ func (h *Handler) GetSmartNudges(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(nudges)
 }
-
-
-

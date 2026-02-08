@@ -96,7 +96,7 @@ func main() {
 		Addr: redisAddr,
 	})
 	defer func() { _ = redisClient.Close() }()
-	
+
 	// Legacy cache init (if needed)
 	_ = cache.NewRedisCache(redisAddr)
 
@@ -119,10 +119,10 @@ func main() {
 
 	// 5. Dependency Injection (Layered Architecture)
 	repo := surplusRepo.NewSurplusRepository(db, db)
-	
+
 	router := &MockRouter{} // Legacy or mock for now
 	matchEngine := matching.NewMatchingEngine(router)
-	
+
 	timeoutContext := time.Duration(2) * time.Second
 	usecase := surplusUcase.NewSurplusUsecase(repo, matchEngine, timeoutContext)
 
@@ -134,9 +134,9 @@ func main() {
 
 	// Resilience & Governance (Phase 5+)
 	loadshedder := apiMiddleware.NewAdaptiveLoadShedder(500 * time.Millisecond)
-	r.Use(loadshedder.Handle) // Adaptive Load Shedding
+	r.Use(loadshedder.Handle)                                // Adaptive Load Shedding
 	r.Use(apiMiddleware.CanarySplitter(10, "v1.1.0-canary")) // 10% Canary Rollout
-	r.Use(apiMiddleware.ChaosMiddleware(logger.Log)) // 🐵 Chaos Monkey
+	r.Use(apiMiddleware.ChaosMiddleware(logger.Log))         // 🐵 Chaos Monkey
 
 	// Metrics
 	r.Handle("/metrics", promhttp.Handler())
@@ -144,23 +144,23 @@ func main() {
 	// 7. Start Outbox Poller (Must be before API Handlers needing outbox)
 	outboxSvc := outbox.NewOutboxService(db)
 	outboxRepo := outbox.NewRepository(db)
-	
+
 	// 8. UNICORN PHASE 4 SERVICES
 	// Loyalty Engine (Uses same Redis as Geo)
 	loyaltySvc := loyalty.NewLoyaltyService(redisClient) // Reuse Redis
-	
+
 	// Inventory Webhook Service (Flash Ludes)
 	inventorySvc := inventory.NewInventoryService(outboxRepo, logger.Log)
-	
+
 	// Trust & Safety (Credit Scoring)
 	trustSvc := trust.NewTrustService()
-	
+
 	// Personalization Engine (Smart Nudges)
 	recSvc := recommendation.NewRecommendationService()
 
 	// 9. Init New API Handler (Unicorn Features)
 	mainHandler := api.NewHandler(db, matchEngine, outboxSvc, loyaltySvc, inventorySvc, trustSvc, recSvc)
-	
+
 	// Mount API V1 Routes
 	r.Mount("/", mainHandler.Routes())
 
@@ -171,7 +171,7 @@ func main() {
 	// Batching & Dispatch (The Brain)
 	batchEngine := logisticsService.NewBatchingEngine()
 	dispatchSvc := logisticsService.NewDispatchService(batchEngine)
-	
+
 	// Start batch processor worker
 	go dispatchSvc.RunBatchProcessor(context.Background())
 
@@ -243,9 +243,9 @@ func main() {
 	}
 
 	// 9. Unicorn Logic: Real-time Notification Engine
-	geoSvc := geo.NewGeoService(redisClient) // Use the initialized redisClient
+	geoSvc := geo.NewGeoService(redisClient)         // Use the initialized redisClient
 	notifSvc := &notifications.NotificationService{} // In real app, inject FCM client here
-	
+
 	notifierWorker := worker.NewSurplusNotifier(geoSvc, notifSvc)
 	go notifierWorker.Run(context.Background(), nc)
 
