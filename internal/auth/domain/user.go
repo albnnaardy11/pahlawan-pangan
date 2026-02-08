@@ -3,6 +3,8 @@ package domain
 import (
 	"context"
 	"time"
+
+	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
 )
 
 type UserRole string
@@ -48,7 +50,13 @@ type UserRepository interface {
 	Create(ctx context.Context, user *User) error
 	GetByEmail(ctx context.Context, email string) (*User, error)
 	GetByID(ctx context.Context, id string) (*User, error)
+	GetByIDForUpdate(ctx context.Context, id string) (*User, error)
 	Update(ctx context.Context, user *User) error
+	
+	// Transaction & Audit
+	SaveAudit(ctx context.Context, event *AccountEvent) error
+	SaveOutbox(ctx context.Context, event *outbox.OutboxEvent) error
+	WithTransaction(ctx context.Context, fn func(repo UserRepository) error) error
 }
 
 type AuthUsecase interface {
