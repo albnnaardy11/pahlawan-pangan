@@ -1,3 +1,5 @@
+// Package main implements basic security penetration tests for the Pahlawan Pangan API.
+// This includes rate limiting, SQL injection, chaos monkey, and XSS attack simulations.
 package main
 
 import (
@@ -13,6 +15,8 @@ import (
 
 // PahlawanSecurityAudit simulates real-world attack vectors on the API.
 // Based on OWASP Top 10 and common microservice vulnerabilities.
+//
+//nolint:gocyclo // Security test requires comprehensive attack simulation
 func main() {
 	fmt.Println("🛡️  [SECURITY AUDIT] Starting Penetration Test Simulation...")
 	baseURL := "http://localhost:8080/api/v1"

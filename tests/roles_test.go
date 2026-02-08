@@ -25,6 +25,7 @@ var (
 	baseURL = "http://localhost:8080"
 )
 
+//nolint:gocyclo // Workflow simulation test requires comprehensive multi-role scenario
 func TestFullWorkflowSimulation(t *testing.T) {
 	// Wait for server to be ready (assuming running in background via cmd/demo/main.go)
 	// In a real test, we would start the server here in a goroutine

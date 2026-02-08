@@ -1,3 +1,5 @@
+// Package main provides a utility to generate RSA key pairs for JWT RS256 signing.
+// This tool generates both private and public keys with secure file permissions.
 package main
 
 import (
@@ -34,7 +36,8 @@ func main() {
 		Type:  "RSA PUBLIC KEY",
 		Bytes: pubASN1,
 	})
-	if err := os.WriteFile("public.pem", pubPEM, 0644); err != nil {
+	// Public keys can be world-readable, but we use 0600 for consistency with security best practices
+	if err := os.WriteFile("public.pem", pubPEM, 0600); err != nil {
 		panic(err)
 	}
 

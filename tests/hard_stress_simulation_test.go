@@ -16,6 +16,7 @@ const (
 	TargetURL = "http://localhost:8080"
 )
 
+//nolint:gocyclo // Stress test requires comprehensive multi-scenario simulation
 func TestHardStressSimulation(t *testing.T) {
 	// Skenario: "Total Chaos" - Menghantam Server dari Segala Sisi
 	const (

@@ -1,3 +1,5 @@
+// Package main implements advanced security audit tests for the Pahlawan Pangan API.
+// This includes JWT algorithm confusion attacks, BOLA/IDOR testing, and API fuzzing.
 package main
 
 import (
@@ -37,7 +39,7 @@ func main() {
 		} else {
 			fmt.Println("   -> ✅ SAFE. Server rejected unsigned token.")
 		}
-		resp.Body.Close()
+		_ = resp.Body.Close()
 	}
 
 	// 2. BOLA / IDOR (Broken Object Level Authorization)
@@ -58,7 +60,7 @@ func main() {
 		} else if respBOLA.StatusCode == 401 || respBOLA.StatusCode == 403 {
 			fmt.Println("   -> ✅ SAFE. Access Denied.")
 		}
-		respBOLA.Body.Close()
+		_ = respBOLA.Body.Close()
 	}
 
 	// 3. FUZZING & ANOMALY INJECTION
@@ -73,13 +75,14 @@ func main() {
 		} else if respFuzz.StatusCode == 400 || respFuzz.StatusCode == 413 || respFuzz.StatusCode == 422 {
 			fmt.Println("   -> ✅ SAFE. Bad Request handled.")
 		}
-		respFuzz.Body.Close()
+		_ = respFuzz.Body.Close()
 	}
 
 	// 4. mTLS CHECK (Simulated)
 	fmt.Println("\n🔒 [AUDIT] Checking TLS Configuration...")
 	// Try to connect to a hypothetical mTLS port (e.g., 8443)
 	tr := &http.Transport{
+		//nolint:gosec // G402: InsecureSkipVerify is intentional for security testing
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	clientTLS := &http.Client{Transport: tr, Timeout: 1 * time.Second}
