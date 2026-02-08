@@ -22,6 +22,19 @@ import (
 	"github.com/albnnaardy11/pahlawan-pangan/internal/recommendation"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/trust"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/worker"
+
+	// Logistics & Escrow Modules
+	escrowService "github.com/albnnaardy11/pahlawan-pangan/internal/escrow/service"
+	logisticsHttp "github.com/albnnaardy11/pahlawan-pangan/internal/logistics/delivery/http"
+	logisticsService "github.com/albnnaardy11/pahlawan-pangan/internal/logistics/service"
+
+	// Community Module
+	communityHttp "github.com/albnnaardy11/pahlawan-pangan/internal/community/delivery/http"
+	communityRepo "github.com/albnnaardy11/pahlawan-pangan/internal/community/repository"
+	communityUsecase "github.com/albnnaardy11/pahlawan-pangan/internal/community/usecase"
+
+	// Community Module
+
 	"github.com/albnnaardy11/pahlawan-pangan/pkg/cache"
 	"github.com/albnnaardy11/pahlawan-pangan/pkg/logger"
 
@@ -141,6 +154,26 @@ func main() {
 	
 	// Mount API V1 Routes
 	r.Mount("/", mainHandler.Routes())
+
+	// 11. UNICORN LOGISTICS & ESCROW
+	// Escrow (Financial Integrity)
+	_ = escrowService.NewEscrowService() // In-memory demo
+
+	// Batching & Dispatch (The Brain)
+	batchEngine := logisticsService.NewBatchingEngine()
+	dispatchSvc := logisticsService.NewDispatchService(batchEngine)
+	
+	// Start batch processor worker
+	go dispatchSvc.RunBatchProcessor(context.Background())
+
+	logisticsHandler := logisticsHttp.NewLogisticsHandler(dispatchSvc)
+	r.Mount("/api/v1/logistics", logisticsHandler.Routes())
+
+	// 12. UNICORN COMMUNITY (Social Proof)
+	communityRepository := communityRepo.NewReviewRepository(db)
+	communityUC := communityUsecase.NewCommunityUsecase(communityRepository)
+	communityHandler := communityHttp.NewCommunityHandler(communityUC)
+	r.Mount("/api/v1/community", communityHandler.Routes())
 
 	// Init Delivery (Existing Core Logic)
 	surplusHttp.NewSurplusHandler(r, usecase)
