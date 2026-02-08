@@ -9,13 +9,17 @@ import (
 	"syscall"
 	"time"
 
+	api "github.com/albnnaardy11/pahlawan-pangan/internal/api"
 	apiMiddleware "github.com/albnnaardy11/pahlawan-pangan/internal/api/middleware"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/audit"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/geo"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/inventory"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/loyalty"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/matching"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/messaging"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/notifications"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/trust"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/worker"
 	"github.com/albnnaardy11/pahlawan-pangan/pkg/cache"
 	"github.com/albnnaardy11/pahlawan-pangan/pkg/logger"
@@ -70,7 +74,7 @@ func main() {
 	})
 	defer redisClient.Close()
 	
-	// Legacy cache init (if needed, or reuse redisClient if possible, but keeping separate for safety)
+	// Legacy cache init (if needed)
 	_ = cache.NewRedisCache(redisAddr)
 
 	// 4. Message Broker (NATS)
@@ -113,11 +117,28 @@ func main() {
 	// Metrics
 	r.Handle("/metrics", promhttp.Handler())
 
-	// Init Delivery
-	surplusHttp.NewSurplusHandler(r, usecase)
-
-	// 7. Start Outbox Poller
+	// 7. Start Outbox Poller (Must be before API Handlers needing outbox)
 	outboxSvc := outbox.NewOutboxService(db)
+	outboxRepo := outbox.NewRepository(db)
+	
+	// 8. UNICORN PHASE 4 SERVICES
+	// Loyalty Engine (Uses same Redis as Geo)
+	loyaltySvc := loyalty.NewLoyaltyService(redisClient) // Reuse Redis
+	
+	// Inventory Webhook Service (Flash Ludes)
+	inventorySvc := inventory.NewInventoryService(outboxRepo, logger.Log)
+	
+	// Trust & Safety (Credit Scoring)
+	trustSvc := trust.NewTrustService()
+
+	// 9. Init New API Handler (Unicorn Features)
+	mainHandler := api.NewHandler(db, matchEngine, outboxSvc, loyaltySvc, inventorySvc, trustSvc)
+	
+	// Mount API V1 Routes
+	r.Mount("/", mainHandler.Routes())
+
+	// Init Delivery (Existing Core Logic)
+	surplusHttp.NewSurplusHandler(r, usecase)
 	go func() {
 		for {
 			_ = outboxSvc.PollAndPublish(context.Background(), natsPublisher, 100)

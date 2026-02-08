@@ -8,8 +8,11 @@ import (
 	"time"
 
 	"github.com/albnnaardy11/pahlawan-pangan/internal/api/middleware"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/inventory"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/loyalty"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/matching"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/trust"
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -27,15 +30,31 @@ type Handler struct {
 	db            *sql.DB
 	matchEngine   *matching.MatchingEngine
 	outboxService *outbox.OutboxService
+	
+	// Unicorn Features
+	loyaltySvc    *loyalty.LoyaltyService
+	inventorySvc  *inventory.InventoryService
+	trustSvc      *trust.TrustService
+
 	limiter       *middleware.IPLimiter        // SRE-Guard
 	loadshedder   *middleware.AdaptiveLoadShedder // Damage Control
 }
 
-func NewHandler(db *sql.DB, engine *matching.MatchingEngine, outbox *outbox.OutboxService) *Handler {
+func NewHandler(
+	db *sql.DB, 
+	engine *matching.MatchingEngine, 
+	outbox *outbox.OutboxService,
+	loyaltySvc *loyalty.LoyaltyService,
+	inventorySvc *inventory.InventoryService,
+	trustSvc *trust.TrustService,
+) *Handler {
 	return &Handler{
 		db:            db,
 		matchEngine:   engine,
 		outboxService: outbox,
+		loyaltySvc:    loyaltySvc,
+		inventorySvc:  inventorySvc,
+		trustSvc:      trustSvc,
 		limiter:       middleware.NewIPLimiter(rate.Limit(50), 100),
 		loadshedder:   middleware.NewAdaptiveLoadShedder(500 * time.Millisecond),
 	}
@@ -115,10 +134,15 @@ func (h *Handler) Routes() http.Handler {
 		// NGO endpoints
 		r.Get("/ngos/nearby", h.GetNearbyNGOs)
 
-		// --- UNICORN PHASE 3: AI, BLOCKCHAIN & AUCTION ---
+	// --- UNICORN PHASE 3: AI, BLOCKCHAIN & AUCTION ---
 		r.Post("/surplus/analyze-image", h.AnalyzeFoodImage)      // Pahlawan-Scan
 		r.Get("/impact/verify/{id}", h.VerifyBlockchainImpact)    // Pahlawan-Trust
 		r.Post("/marketplace/auction/bid", h.PlaceAuctionBid)    // Pahlawan-Auction
+
+		// --- PHASE 4: LOYALTY, INVENTORY & TRUST ---
+		r.Get("/leaderboard", h.GetLeaderboard)                   // Loyalty Engine
+		r.Post("/webhooks/inventory", h.HandleInventoryWebhook)   // POS Integration
+		r.Get("/users/{id}/score", h.GetUserScore)                // Social Credit Score
 	})
 
 	return r
@@ -708,6 +732,79 @@ func (h *Handler) PlaceAuctionBid(w http.ResponseWriter, r *http.Request) {
 		"final_price":    req.BidAmount,
 		"message":        "Congratulations! You won the Flash Ludes auction.",
 		"pickup_expiry":  time.Now().Add(1 * time.Hour),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(res)
+}
+
+// --- PHASE 4 UNICORN IMPLEMENTATION ---
+
+// GetLeaderboard returns the top 10 heroes (Loyalty Engine)
+func (h *Handler) GetLeaderboard(w http.ResponseWriter, r *http.Request) {
+	_, span := tracer.Start(r.Context(), "GetLeaderboard")
+	defer span.End()
+
+	topUsers, err := h.loyaltySvc.GetTopUsers(r.Context(), 10)
+	if err != nil {
+		span.RecordError(err)
+		http.Error(w, "Failed to fetch leaderboard", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(topUsers)
+}
+
+// HandleInventoryWebhook handles real-time stock updates from POS (Flash Ludes)
+func (h *Handler) HandleInventoryWebhook(w http.ResponseWriter, r *http.Request) {
+	ctx, span := tracer.Start(r.Context(), "HandleInventoryWebhook")
+	defer span.End()
+
+	var payload inventory.POSWebhookPayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err := h.inventorySvc.ProcessStockUpdate(ctx, payload)
+	if err != nil {
+		span.RecordError(err)
+		http.Error(w, "Failed to process webhook", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]string{"status": "processed"})
+}
+
+// GetUserScore returns the Pahlawan Score (Trust System)
+func (h *Handler) GetUserScore(w http.ResponseWriter, r *http.Request) {
+	_, span := tracer.Start(r.Context(), "GetUserScore")
+	defer span.End()
+
+	userID := chi.URLParam(r, "id")
+
+	// Calculate Score (Mock Data for Demo)
+	factors := trust.ScoreFactors{
+		TotalPickups:      12,
+		GhostingIncidents: 0,
+		DisputeCount:      0,
+		AccountAgeDays:    120,
+		VerifiedIdentity:  true,
+	}
+	
+	score := h.trustSvc.CalculateScore(r.Context(), factors)
+	level := h.trustSvc.GetTrustLevel(score)
+
+	res := map[string]interface{}{
+		"user_id": userID,
+		"score":   score,
+		"level":   level,
+		"benefits": []string{
+			"Priority Access to Flash Ludes",
+			"5% Extra Discount",
+		},
 	}
 
 	w.Header().Set("Content-Type", "application/json")
