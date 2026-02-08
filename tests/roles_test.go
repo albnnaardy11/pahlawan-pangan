@@ -77,7 +77,7 @@ func TestFullWorkflowSimulation(t *testing.T) {
 				} else {
 					atomic.AddInt64(&totalErrors, 1)
 				}
-				resp.Body.Close()
+				_ = resp.Body.Close()
 				time.Sleep(100 * time.Millisecond) // Human delay
 			}
 		}(i)
@@ -99,8 +99,8 @@ func TestFullWorkflowSimulation(t *testing.T) {
 				}
 				
 				var items []DemoSurplus
-				json.NewDecoder(resp.Body).Decode(&items)
-				resp.Body.Close()
+				_ = json.NewDecoder(resp.Body).Decode(&items)
+				_ = resp.Body.Close()
 				atomic.AddInt64(&totalReads, 1)
 
 				// Step B: Claim first available item
@@ -120,7 +120,7 @@ func TestFullWorkflowSimulation(t *testing.T) {
 						if cResp.StatusCode == 200 {
 							atomic.AddInt64(&totalClaimed, 1)
 						}
-						cResp.Body.Close()
+						_ = cResp.Body.Close()
 					}
 				}
 				time.Sleep(50 * time.Millisecond)
@@ -140,8 +140,8 @@ func TestFullWorkflowSimulation(t *testing.T) {
 				}
 				resp, err := http.Get(baseURL + "/api/v1/marketplace")
 				if err == nil {
-					io.Copy(io.Discard, resp.Body)
-					resp.Body.Close()
+					_, _ = io.Copy(io.Discard, resp.Body)
+					_ = resp.Body.Close()
 					atomic.AddInt64(&totalReads, 1)
 				}
 				time.Sleep(200 * time.Millisecond)

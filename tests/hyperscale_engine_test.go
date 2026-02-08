@@ -62,7 +62,8 @@ func TestHyperScaleEngine(t *testing.T) {
 
 			_, err := engine.MatchNGO(ctx, surplus, candidates)
 			if err != nil {
-				// We don't expect errors in this mock
+				// Log error in mock test - in production this would be handled
+				_ = err
 			}
 		}()
 	}

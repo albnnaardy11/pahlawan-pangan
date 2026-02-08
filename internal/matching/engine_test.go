@@ -73,7 +73,7 @@ func TestCircuitBreaker_OpenState(t *testing.T) {
 
 	// Trigger failures
 	for i := 0; i < 3; i++ {
-		cb.Execute(func() error {
+		_ = cb.Execute(func() error {
 			return context.DeadlineExceeded
 		})
 	}
@@ -139,6 +139,6 @@ func BenchmarkMatchNGO(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		engine.MatchNGO(ctx, surplus, candidates)
+		_, _ = engine.MatchNGO(ctx, surplus, candidates)
 	}
 }

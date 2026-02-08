@@ -17,6 +17,7 @@ type ScaleSimulationMockRouter struct{}
 
 func (m *ScaleSimulationMockRouter) GetTravelTime(ctx context.Context, startLat, startLon, endLat, endLon float64) (time.Duration, error) {
 	// Simulate network latency (50-200ms)
+	//nolint:gosec // G404: Using math/rand for test simulation, not cryptographic purposes
 	latency := time.Duration(50+rand.IntN(150)) * time.Millisecond
 	select {
 	case <-ctx.Done():
@@ -62,7 +63,9 @@ func TestScaleSimulation(t *testing.T) {
 			surplus := matching.Surplus{
 				ID:          fmt.Sprintf("surplus-%d", id),
 				ProviderID:  fmt.Sprintf("provider-%d", id),
+				//nolint:gosec // G404: Using math/rand for test mock coordinates, not cryptographic purposes
 				Lat:         -6.200000 + (rand.Float64() * 0.01),
+				//nolint:gosec // G404: Using math/rand for test mock coordinates, not cryptographic purposes
 				Lon:         106.816666 + (rand.Float64() * 0.01),
 				ExpiryTime:  time.Now().Add(2 * time.Hour),
 				QuantityKgs: 10.0,
@@ -72,7 +75,9 @@ func TestScaleSimulation(t *testing.T) {
 			for j := 0; j < CandidatesPerUser; j++ {
 				candidates[j] = matching.NGO{
 					ID:  fmt.Sprintf("ngo-%d-%d", id, j),
+					//nolint:gosec // G404: Using math/rand for test mock coordinates, not cryptographic purposes
 					Lat: -6.200000 + (rand.Float64() * 0.01),
+					//nolint:gosec // G404: Using math/rand for test mock coordinates, not cryptographic purposes
 					Lon: 106.816666 + (rand.Float64() * 0.01),
 				}
 			}

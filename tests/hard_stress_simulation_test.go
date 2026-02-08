@@ -68,7 +68,7 @@ func TestHardStressSimulation(t *testing.T) {
 					} else {
 						atomic.AddInt64(&totalErrors, 1)
 					}
-					resp.Body.Close()
+					_ = resp.Body.Close()
 				} else {
 					atomic.AddInt64(&totalErrors, 1)
 				}
@@ -88,7 +88,7 @@ func TestHardStressSimulation(t *testing.T) {
 					if resp.StatusCode == 200 {
 						atomic.AddInt64(&totalAIAnalyses, 1)
 					}
-					resp.Body.Close()
+					_ = resp.Body.Close()
 				} else {
 					atomic.AddInt64(&totalErrors, 1)
 				}
@@ -107,11 +107,12 @@ func TestHardStressSimulation(t *testing.T) {
 				resp, err := client.Get(TargetURL + "/api/v1/marketplace")
 				if err == nil {
 					var list []map[string]interface{}
-					json.NewDecoder(resp.Body).Decode(&list)
-					resp.Body.Close()
+					_ = json.NewDecoder(resp.Body).Decode(&list)
+					_ = resp.Body.Close()
 					
 					// Random claim
 					if len(list) > 0 {
+						//nolint:gosec // G404: Using math/rand for test random selection, not cryptographic purposes
 						target := list[rand.IntN(len(list))]
 						idVal := target["id"].(string)
 						cResp, cErr := client.Post(TargetURL+"/api/v1/surplus/"+idVal+"/claim", "application/json", nil)
@@ -119,7 +120,7 @@ func TestHardStressSimulation(t *testing.T) {
 							if cResp.StatusCode == 200 {
 								atomic.AddInt64(&totalClaims, 1)
 							}
-							cResp.Body.Close()
+							_ = cResp.Body.Close()
 						}
 					}
 				}
@@ -139,7 +140,7 @@ func TestHardStressSimulation(t *testing.T) {
 					if resp.StatusCode == 200 {
 						atomic.AddInt64(&totalTrustChecks, 1)
 					}
-					resp.Body.Close()
+					_ = resp.Body.Close()
 				}
 				time.Sleep(40 * time.Millisecond)
 			}
@@ -162,7 +163,7 @@ func TestHardStressSimulation(t *testing.T) {
 					if resp.StatusCode == 200 {
 						atomic.AddInt64(&totalBids, 1)
 					}
-					resp.Body.Close()
+					_ = resp.Body.Close()
 				}
 				time.Sleep(60 * time.Millisecond)
 			}

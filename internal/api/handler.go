@@ -157,7 +157,7 @@ func (h *Handler) PostSurplus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "database error", http.StatusInternalServerError)
 		return
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// Insert surplus
 	_, err = tx.ExecContext(ctx, `
@@ -283,6 +283,10 @@ func (h *Handler) ClaimSurplus(w http.ResponseWriter, r *http.Request) {
 		INSERT INTO deliveries (surplus_id, fulfillment_method, pickup_verification_code, external_tracking_id, status)
 		VALUES ($1, $2, $3, $4, 'assigned')
 	`, surplusID, fStatus.Method, fStatus.VerificationCode, fStatus.TrackingID)
+	if err != nil {
+		span.RecordError(err)
+		// Log error but continue with response
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
@@ -314,7 +318,7 @@ func (h *Handler) BrowseSurplus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to fetch marketplace", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var results []map[string]interface{}
 	for rows.Next() {

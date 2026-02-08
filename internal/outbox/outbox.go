@@ -96,7 +96,11 @@ func (s *OutboxService) PollAndPublish(ctx context.Context, publisher MessagePub
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			span.RecordError(closeErr)
+		}
+	}()
 
 	var events []OutboxEvent
 	for rows.Next() {

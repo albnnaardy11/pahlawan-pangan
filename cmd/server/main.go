@@ -49,7 +49,11 @@ func main() {
 		os.Exit(1)
 	}
 	db.SetMaxOpenConns(100)
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			logger.Error("Failed to close database connection", zap.Error(err))
+		}
+	}()
 
 	// 3. Redis Caching
 	redisAddr := os.Getenv("REDIS_URL")
@@ -114,11 +118,9 @@ func main() {
 	auditEngine := audit.NewReconciliationEngine()
 	go func() {
 		ticker := time.NewTicker(24 * time.Hour)
-		for {
-			select {
-			case <-ticker.C:
-				_, _ = auditEngine.RunAudit(context.Background())
-			}
+		defer ticker.Stop()
+		for range ticker.C {
+			_, _ = auditEngine.RunAudit(context.Background())
 		}
 	}()
 
