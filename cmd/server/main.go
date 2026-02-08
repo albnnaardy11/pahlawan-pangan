@@ -38,6 +38,12 @@ import (
 	carbonRepo "github.com/albnnaardy11/pahlawan-pangan/internal/carbon/repository"
 	carbonService "github.com/albnnaardy11/pahlawan-pangan/internal/carbon/service"
 
+	// IAM & Security
+	authHttp "github.com/albnnaardy11/pahlawan-pangan/internal/auth/delivery/http"
+	iamMiddleware "github.com/albnnaardy11/pahlawan-pangan/internal/auth/middleware"
+	authRepo "github.com/albnnaardy11/pahlawan-pangan/internal/auth/repository"
+	authUsecase "github.com/albnnaardy11/pahlawan-pangan/internal/auth/usecase"
+
 	"github.com/albnnaardy11/pahlawan-pangan/pkg/cache"
 	"github.com/albnnaardy11/pahlawan-pangan/pkg/logger"
 
@@ -183,6 +189,21 @@ func main() {
 	carbonSvc := carbonService.NewCarbonService(carbonRepository)
 	carbonHandler := carbonHttp.NewCarbonHandler(carbonSvc)
 	r.Mount("/api/v1/carbon", carbonHandler.Routes())
+
+	// 15. UNICORN IAM & SECURITY
+	authenticationRepo := authRepo.NewPostgresUserRepository(db)
+	authenticationUC := authUsecase.NewAuthUsecase(authenticationRepo, redisClient, natsPublisher, time.Second*5)
+	authenticationHandler := authHttp.NewAuthHandler(authenticationUC)
+	r.Mount("/api/v1/auth", authenticationHandler.Routes())
+
+	// 16. UNICORN MFA WORKER (Async OTP)
+	_, _ = nc.Subscribe("otp.request", func(m *nats.Msg) {
+		logger.Info("📧 OTP Request Received", zap.ByteString("payload", m.Data))
+		// Logika kirim SMS/Email Gateway di sini
+	})
+
+	// Apply Global Auth Middleware
+	r.Use(iamMiddleware.AuthMiddleware(authenticationUC))
 
 	// Init Delivery (Existing Core Logic)
 	surplusHttp.NewSurplusHandler(r, usecase)

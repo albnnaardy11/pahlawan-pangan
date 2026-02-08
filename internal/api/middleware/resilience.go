@@ -11,13 +11,13 @@ import (
 // DistributedRateLimiter uses Redis to limit requests across multiple server nodes.
 // Essential for national scale (Tokopedia/Gojek level).
 type DistributedRateLimiter struct {
-	client *redis.Client
+	redis  *redis.Client
 	limit  int
 	window time.Duration
 }
 
-func NewDistributedRateLimiter(client *redis.Client, limit int, window time.Duration) *DistributedRateLimiter {
-	return &DistributedRateLimiter{client: client, limit: limit, window: window}
+func NewDistributedRateLimiter(redisClient *redis.Client, limit int, window time.Duration) *DistributedRateLimiter {
+	return &DistributedRateLimiter{redis: redisClient, limit: limit, window: window}
 }
 
 func (l *DistributedRateLimiter) Limit(next http.Handler) http.Handler {
@@ -26,14 +26,14 @@ func (l *DistributedRateLimiter) Limit(next http.Handler) http.Handler {
 		key := "rate_limit:" + ip
 		
 		ctx := r.Context()
-		count, err := l.client.Incr(ctx, key).Result()
+		count, err := l.redis.Incr(ctx, key).Result()
 		if err != nil {
 			next.ServeHTTP(w, r) // Fail-open strategy to maintain availability
 			return
 		}
 
 		if count == 1 {
-			l.client.Expire(ctx, key, l.window)
+			l.redis.Expire(ctx, key, l.window)
 		}
 
 		if int(count) > l.limit {

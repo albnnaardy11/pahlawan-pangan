@@ -69,7 +69,7 @@ func (s *NotificationService) NotifyBatch(ctx context.Context, userIDs []string,
 	return nil
 }
 
-func (s *NotificationService) sendPush(ngoID, msg string) error {
+func (s *NotificationService) sendPush(ngoID string, _ string) error {
 	// Simulate transient failure or "offline" status
 	if ngoID == "ngo-offline-mock" {
 		return fmt.Errorf("device unreachable")
@@ -79,7 +79,7 @@ func (s *NotificationService) sendPush(ngoID, msg string) error {
 	return nil
 }
 
-func (s *NotificationService) handleDeliveryFailure(_ctx context.Context, surplusID, ngoID string, _originalErr error) error {
+func (s *NotificationService) handleDeliveryFailure(_ context.Context, surplusID, ngoID string, _ error) error {
 	// Implementation: Insert into DLQ table or emit RematchRequired event
 	// This ensures the food is saved even if the primary recipient is down.
 	log.Printf("[DLQ] Surplus %s must be re-routed. Original NGO %s unreachable.", surplusID, ngoID)
