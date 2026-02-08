@@ -33,7 +33,10 @@ import (
 	communityRepo "github.com/albnnaardy11/pahlawan-pangan/internal/community/repository"
 	communityUsecase "github.com/albnnaardy11/pahlawan-pangan/internal/community/usecase"
 
-	// Community Module
+	// Carbon Module (ESG)
+	carbonHttp "github.com/albnnaardy11/pahlawan-pangan/internal/carbon/delivery/http"
+	carbonRepo "github.com/albnnaardy11/pahlawan-pangan/internal/carbon/repository"
+	carbonService "github.com/albnnaardy11/pahlawan-pangan/internal/carbon/service"
 
 	"github.com/albnnaardy11/pahlawan-pangan/pkg/cache"
 	"github.com/albnnaardy11/pahlawan-pangan/pkg/logger"
@@ -175,12 +178,29 @@ func main() {
 	communityHandler := communityHttp.NewCommunityHandler(communityUC)
 	r.Mount("/api/v1/community", communityHandler.Routes())
 
+	// 13. UNICORN ESG (Sustainability - Blockchain Ready)
+	carbonRepository := carbonRepo.NewCarbonRepository(db)
+	carbonSvc := carbonService.NewCarbonService(carbonRepository)
+	carbonHandler := carbonHttp.NewCarbonHandler(carbonSvc)
+	r.Mount("/api/v1/carbon", carbonHandler.Routes())
+
 	// Init Delivery (Existing Core Logic)
 	surplusHttp.NewSurplusHandler(r, usecase)
+
+	// 14. START BACKGROUND WORKERS
+	// Outbox Poller
 	go func() {
 		for {
 			_ = outboxSvc.PollAndPublish(context.Background(), natsPublisher, 100)
 			time.Sleep(1 * time.Second)
+		}
+	}()
+
+	// Carbon Impact Ledger Worker (Blockchain-Ready)
+	carbonWorker := worker.NewCarbonWorker(carbonSvc, nc, logger.Log)
+	go func() {
+		if err := carbonWorker.Start(context.Background()); err != nil {
+			logger.Error("CarbonWorker failed to start", zap.Error(err))
 		}
 	}()
 

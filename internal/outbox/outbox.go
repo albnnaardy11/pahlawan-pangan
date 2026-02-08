@@ -20,6 +20,8 @@ const (
 	SurplusClaimed  EventType = "surplus.claimed"
 	SurplusExpired  EventType = "surplus.expired"
 	RematchRequired EventType = "surplus.rematch_required"
+	FoodDelivered   EventType = "delivery.completed"
+	FundsReleased    EventType = "escrow.funds_released"
 )
 
 // OutboxEvent represents an event to be published
