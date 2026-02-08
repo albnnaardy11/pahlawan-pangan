@@ -7,6 +7,7 @@ import (
 
 	"github.com/segmentio/encoding/json"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -104,7 +105,8 @@ func (s *OutboxService) PollAndPublish(ctx context.Context, publisher MessagePub
 		}
 	}()
 
-	var events []OutboxEvent
+	// Pre-allocate slice to avoid resizing overhead (Mechanical Sympathy)
+	events := make([]OutboxEvent, 0, batchSize)
 	for rows.Next() {
 		var event OutboxEvent
 		err := rows.Scan(
@@ -126,6 +128,28 @@ func (s *OutboxService) PollAndPublish(ctx context.Context, publisher MessagePub
 
 	// Publish each event
 	for _, event := range events {
+		// 1. Reliability Hook: "The Stale Event Dropper" (Chaos Monkey Resistance)
+		// If an event is older than 5 minutes, it's irrelevant (e.g., OTPs). Drop it.
+		if time.Since(event.CreatedAt) > 5*time.Minute {
+			span.AddEvent("dropping_stale_event", trace.WithAttributes(
+				attribute.String("event.id", event.ID),
+				attribute.String("event.type", string(event.EventType)),
+				attribute.String("event.age", time.Since(event.CreatedAt).String()),
+			))
+			
+			// Mark as "published" (effectively ignored) to prevent reprocessing loop
+			_, err := s.db.ExecContext(ctx, `
+				UPDATE outbox_events 
+				SET published = true, published_at = $1 
+				WHERE id = $2
+			`, time.Now(), event.ID)
+			
+			if err != nil {
+				span.RecordError(err)
+			}
+			continue
+		}
+
 		// Restore trace context
 		err := publisher.Publish(ctx, event)
 		if err != nil {

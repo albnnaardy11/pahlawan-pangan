@@ -141,13 +141,15 @@ func (r *pgUserRepository) Create(ctx context.Context, user *domain.User) error 
 	ctx, span := tracer.Start(ctx, "db.create_user")
 	defer span.End()
 
+	// Dual-Write: Writing to both 'email' (old) and 'contact_email' (new)
 	query := `
-		INSERT INTO users (id, email, phone, password_hash, full_name, role, status, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO users (id, email, contact_email, phone, password_hash, full_name, role, status, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	`
 	_, err := r.executor().ExecContext(ctx, query,
 		user.ID,
-		user.Email,
+		user.Email, // Old column
+		user.Email, // New column (Double write)
 		user.Phone,
 		user.PasswordHash,
 		user.FullName,
@@ -170,11 +172,16 @@ func (r *pgUserRepository) GetByEmail(ctx context.Context, email string) (*domai
 	))
 	defer span.End()
 
-	query := `SELECT id, email, phone, password_hash, full_name, role, status, created_at, updated_at FROM users WHERE email = $1`
+	// Dual-Read: Select both. Application logic chooses valid one.
+	query := `SELECT id, email, contact_email, phone, password_hash, full_name, role, status, created_at, updated_at FROM users WHERE email = $1 OR contact_email = $1`
 	user := &domain.User{}
+	
+	var emailCol, contactEmailCol sql.NullString
+
 	err := r.executor().QueryRowContext(ctx, query, email).Scan(
 		&user.ID,
-		&user.Email,
+		&emailCol,
+		&contactEmailCol,
 		&user.Phone,
 		&user.PasswordHash,
 		&user.FullName,
@@ -190,6 +197,14 @@ func (r *pgUserRepository) GetByEmail(ctx context.Context, email string) (*domai
 		}
 		return nil, err
 	}
+
+	// Smart Switch: Prefer contact_email (new), fallback to email (old)
+	if contactEmailCol.Valid && contactEmailCol.String != "" {
+		user.Email = contactEmailCol.String
+	} else {
+		user.Email = emailCol.String
+	}
+
 	return user, nil
 }
 
@@ -199,11 +214,14 @@ func (r *pgUserRepository) GetByID(ctx context.Context, id string) (*domain.User
 	))
 	defer span.End()
 
-	query := `SELECT id, email, phone, password_hash, full_name, role, status, created_at, updated_at FROM users WHERE id = $1`
+	query := `SELECT id, email, contact_email, phone, password_hash, full_name, role, status, created_at, updated_at FROM users WHERE id = $1`
 	user := &domain.User{}
+	var emailCol, contactEmailCol sql.NullString
+
 	err := r.executor().QueryRowContext(ctx, query, id).Scan(
 		&user.ID,
-		&user.Email,
+		&emailCol,
+		&contactEmailCol,
 		&user.Phone,
 		&user.PasswordHash,
 		&user.FullName,
@@ -219,6 +237,13 @@ func (r *pgUserRepository) GetByID(ctx context.Context, id string) (*domain.User
 		}
 		return nil, err
 	}
+
+	if contactEmailCol.Valid && contactEmailCol.String != "" {
+		user.Email = contactEmailCol.String
+	} else {
+		user.Email = emailCol.String
+	}
+
 	return user, nil
 }
 
@@ -230,14 +255,17 @@ func (r *pgUserRepository) GetByIDForUpdate(ctx context.Context, id string) (*do
 	defer span.End()
 
 	// Uses FOR UPDATE to lock the row during transaction
-	query := `SELECT id, email, phone, password_hash, full_name, role, status, created_at, updated_at FROM users WHERE id = $1 FOR UPDATE`
+	query := `SELECT id, email, contact_email, phone, password_hash, full_name, role, status, created_at, updated_at FROM users WHERE id = $1 FOR UPDATE`
 	// Attribute the statement for clarity in traces
 	span.SetAttributes(attribute.String("db.statement", query))
 	
 	user := &domain.User{}
+	var emailCol, contactEmailCol sql.NullString
+
 	err := r.executor().QueryRowContext(ctx, query, id).Scan(
 		&user.ID,
-		&user.Email,
+		&emailCol,
+		&contactEmailCol,
 		&user.Phone,
 		&user.PasswordHash,
 		&user.FullName,
@@ -251,6 +279,13 @@ func (r *pgUserRepository) GetByIDForUpdate(ctx context.Context, id string) (*do
 		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
+
+	if contactEmailCol.Valid && contactEmailCol.String != "" {
+		user.Email = contactEmailCol.String
+	} else {
+		user.Email = emailCol.String
+	}
+
 	return user, nil
 }
 
@@ -260,17 +295,19 @@ func (r *pgUserRepository) Update(ctx context.Context, user *domain.User) error 
 	))
 	defer span.End()
 
+	// Dual-Write Update
 	query := `
 		UPDATE users 
-		SET full_name = $1, status = $2, updated_at = $3, email = $4
-		WHERE id = $5
+		SET full_name = $1, status = $2, updated_at = $3, email = $4, contact_email = $5
+		WHERE id = $6
 	`
 	user.UpdatedAt = time.Now()
 	_, err := r.executor().ExecContext(ctx, query,
 		user.FullName,
 		user.Status,
 		user.UpdatedAt,
-		user.Email, // Added email update as per requirements
+		user.Email, // Update old
+		user.Email, // Update new (Dual Write)
 		user.ID,
 	)
 	if err != nil {
