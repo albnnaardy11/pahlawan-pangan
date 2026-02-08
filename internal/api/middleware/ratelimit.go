@@ -1,7 +1,9 @@
 package middleware
 
 import (
+	"net"
 	"net/http"
+	"strings"
 	"sync"
 
 	"golang.org/x/time/rate"
@@ -31,8 +33,11 @@ func (i *IPLimiter) GetLimiter(ip string) *rate.Limiter {
 
 	if !exists {
 		i.mu.Lock()
-		limiter = rate.NewLimiter(i.r, i.b)
-		i.ips[ip] = limiter
+		// Double-check to prevent race between RLock/Unlock and Lock
+		if limiter, exists = i.ips[ip]; !exists {
+			limiter = rate.NewLimiter(i.r, i.b)
+			i.ips[ip] = limiter
+		}
 		i.mu.Unlock()
 	}
 
@@ -42,8 +47,22 @@ func (i *IPLimiter) GetLimiter(ip string) *rate.Limiter {
 func LimitByIP(limiter *IPLimiter) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Get IP (simulated, in prod use X-Forwarded-For)
-			ip := r.RemoteAddr
+			// Resolve Real IP (Standard SRE practice)
+			ip := r.Header.Get("X-Forwarded-For")
+			if ip == "" {
+				ip = r.Header.Get("X-Real-IP")
+			}
+			if ip == "" {
+				host, _, err := net.SplitHostPort(r.RemoteAddr)
+				if err == nil {
+					ip = host
+				} else {
+					ip = r.RemoteAddr
+				}
+			} else if strings.Contains(ip, ",") {
+				ip = strings.TrimSpace(strings.Split(ip, ",")[0])
+			}
+
 			if !limiter.GetLimiter(ip).Allow() {
 				http.Error(w, "⚡ Rate Limit Exceeded: Please slow down your requests (SRE Policy)", http.StatusTooManyRequests)
 				return

@@ -2,7 +2,9 @@ package middleware
 
 import (
 	"fmt"
+	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -20,23 +22,48 @@ func NewDistributedRateLimiter(redisClient *redis.Client, limit int, window time
 	return &DistributedRateLimiter{redis: redisClient, limit: limit, window: window}
 }
 
+// Lua script for atomic increment and expire
+var rateLimitScript = redis.NewScript(`
+	local count = redis.call("INCR", KEYS[1])
+	if count == 1 then
+		redis.call("EXPIRE", KEYS[1], ARGV[1])
+	end
+	return count
+`)
+
 func (l *DistributedRateLimiter) Limit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ip := r.RemoteAddr // In prod: X-Forwarded-For
+		// 1. Resolve Real IP (Standard SRE practice for national-scale apps behind LB/CDN)
+		ip := r.Header.Get("X-Forwarded-For")
+		if ip == "" {
+			ip = r.Header.Get("X-Real-IP")
+		}
+		if ip == "" {
+			host, _, err := net.SplitHostPort(r.RemoteAddr)
+			if err == nil {
+				ip = host
+			} else {
+				ip = r.RemoteAddr
+			}
+		} else {
+			// X-Forwarded-For can be a comma-separated list
+			if strings.Contains(ip, ",") {
+				ip = strings.TrimSpace(strings.Split(ip, ",")[0])
+			}
+		}
+
 		key := "rate_limit:" + ip
-		
 		ctx := r.Context()
-		count, err := l.redis.Incr(ctx, key).Result()
+
+		// 2. Atomic Increment & Expire using Lua (Ensures window is set even if process crashes)
+		result, err := rateLimitScript.Run(ctx, l.redis, []string{key}, int(l.window.Seconds())).Int64()
 		if err != nil {
-			next.ServeHTTP(w, r) // Fail-open strategy to maintain availability
+			// Fail-open strategy: better to allow extra requests than block legit users when Redis is flaky
+			next.ServeHTTP(w, r)
 			return
 		}
 
-		if count == 1 {
-			l.redis.Expire(ctx, key, l.window)
-		}
-
-		if int(count) > l.limit {
+		if result > int64(l.limit) {
 			w.Header().Set("X-RateLimit-Limit", fmt.Sprintf("%d", l.limit))
 			w.WriteHeader(http.StatusTooManyRequests)
 			_, _ = w.Write([]byte("🚫 [SRE-DISTRIBUTED] Rate limit exceeded. Try again in a few seconds."))
