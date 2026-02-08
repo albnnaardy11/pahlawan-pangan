@@ -1,4 +1,4 @@
-# 🛡️ Pahlawan Pangan: High-Performance Food Distribution System
+#  Pahlawan Pangan: High-Performance Food Distribution System
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/albnnaardy11/pahlawan-pangan)](https://goreportcard.com/report/github.com/albnnaardy11/pahlawan-pangan)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
@@ -11,13 +11,13 @@
 
 ---
 
-## 🚀 The Vision
+##  The Vision
 
 Pahlawan Pangan is not just a CRUD application. It is a **Distributed Transaction Engine** designed to solve the logistical complexity of food rescue operations at a national scale. By leveraging **Event-Driven Architecture (EDA)**, **Transactional Outbox Patterns**, and **Zero-Trust Security Principles**, this system guarantees data integrity even in the face of network partitions or infrastructure failures.
 
 ---
 
-## 🏗️ System Architecture
+##  System Architecture
 
 Our architecture decouples write-heavy operations from read-heavy analytics using **NATS JetStream** for asynchronous consistency and **PostgreSQL** with Pessimistic Locking for critical inventory mutations.
 
@@ -53,11 +53,11 @@ graph TD
 
 ---
 
-## ⚡ Mechanical Sympathy & The Benchmarks
+##  Mechanical Sympathy & The Benchmarks
 
 We optimize for the bare metal.
 
-### 2. ⚡ Zero-Allocations
+### 2.Zero-Allocations
 *   **Unsafe String Conversion**: In high-throughput hot paths (e.g., OTP Verification), we use `unsafe.Slice` to cast `string` to `[]byte` without heap allocation.
 *   **Slice Pre-allocation**: Outbox Poller utilizes `make([]Event, 0, batchSize)` to prevent dynamic resizing.
 
@@ -72,19 +72,19 @@ We optimize for the bare metal.
 
 ---
 
-## 💎 Engineering Excellence: "The Why"
+## Engineering Excellence: "The Why"
 
-### 1. 🛡️ Military-Grade Security
+### 1.  Military-Grade Security
 *   **RS256 Signing**: Asymmetric keys prevent compromised services from forging tokens.
 *   **Constant-Time Compare**: Eliminates timing attacks on OTP verification.
 *   **Argon2id**: Memory-hard hashing resists GPU cracking.
 
-### 3. 🔄 Distributed Integrity (The "Unicorn" Standard)
+### 3.  Distributed Integrity (The "Unicorn" Standard)
 *   **Transactional Outbox**: Solves the *Dual-Write Problem*.
 *   **Stale Event Dropper**: Protects against "Zombie Consumers" by dropping expired messages (>5m).
 *   **Idempotency**: Downstreams deduplicate via `trace_id`.
 
-### 4. 👁️ Forensic Observability (Glass Box)
+### 4.  Forensic Observability (Glass Box)
 *   **Tail-Based Sampling**: Smart Middleware captures:
     *   0.1% of Success (200 OK)
     *   **100%** of Slow Requests (>500ms)
@@ -92,7 +92,7 @@ We optimize for the bare metal.
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 *   **Language**: Go 1.22+ (Strict Concurrency)
 *   **Database**: PostgreSQL 16 (Pessimistic Locking `FOR UPDATE`)
@@ -102,7 +102,7 @@ We optimize for the bare metal.
 
 ---
 
-## 🚦 Getting Started
+##  Getting Started
 
 ### Prerequisites
 *   Docker & Docker Compose
@@ -123,15 +123,15 @@ go run cmd/api/main.go
 
 ---
 
-## 📚 Documentation & Knowledge Base
+##  Documentation & Knowledge Base
 
 We treat documentation as code.
 
-### 📖 API Reference (Swagger)
+###  API Reference (Swagger)
 Interactive API documentation available at:
 > `/api/swagger.yaml` or run `make swagger-ui`
 
-### 🧠 Engineering Wiki (Docusaurus)
+###  Engineering Wiki (Docusaurus)
 Located in `/docs`. Run `npm start` in `/docs` to view:
 *   [ADR 001: NATS vs Kafka](./docs/adr-001-nats-vs-kafka.md)
 *   [Security Playbook](./docs/security-playbook.md)
@@ -139,7 +139,7 @@ Located in `/docs`. Run `npm start` in `/docs` to view:
 
 ---
 
-## 🧪 Testing Strategy
+## Testing Strategy
 
 ### 1. Penetration Testing Simulation
 Verify security hardness:
