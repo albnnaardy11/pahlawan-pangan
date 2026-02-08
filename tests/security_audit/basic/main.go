@@ -36,7 +36,6 @@ func main() {
 				blockedCount++
 				continue
 			}
-			defer resp.Body.Close()
 			if resp.StatusCode == 429 {
 				blockedCount++ // 429 Too Many Requests
 			} else if resp.StatusCode == 503 {
@@ -44,6 +43,7 @@ func main() {
 			} else {
 				successCount++
 			}
+			_ = resp.Body.Close()
 			time.Sleep(10 * time.Millisecond) // Fast fire
 		}
 		fmt.Printf("   -> Results: %d Requests Passed, %d Requests BLOCKED/SHED. (Target: >0 Blocked)\n", successCount, blockedCount)
@@ -64,7 +64,11 @@ func main() {
 			fmt.Printf("   -> [ERROR] Connection failed: %v\n", err)
 			return
 		}
-		defer resp.Body.Close()
+		defer func() {
+			if closeErr := resp.Body.Close(); closeErr != nil {
+				fmt.Printf("   -> [WARN] Failed to close response body: %v\n", closeErr)
+			}
+		}()
 
 		body, _ := io.ReadAll(resp.Body)
 		if strings.Contains(string(body), "postgres") || strings.Contains(string(body), "syntax error") {
@@ -94,7 +98,11 @@ func main() {
 			fmt.Println("   -> [INFO] Connection dropped (Expected behavior).")
 			return
 		}
-		defer resp.Body.Close()
+		defer func() {
+			if closeErr := resp.Body.Close(); closeErr != nil {
+				fmt.Printf("   -> [WARN] Failed to close response body: %v\n", closeErr)
+			}
+		}()
 
 		if resp.StatusCode == 500 {
 			fmt.Println("   -> ✅ RESILIENCE VERIFIED. Ops/SRE alerts should be firing now.")
@@ -130,7 +138,11 @@ func main() {
 			fmt.Printf("   -> [ERROR] Connection failed: %v\n", err)
 			return
 		}
-		defer resp.Body.Close()
+		defer func() {
+			if closeErr := resp.Body.Close(); closeErr != nil {
+				fmt.Printf("   -> [WARN] Failed to close response body: %v\n", closeErr)
+			}
+		}()
 
 		if resp.StatusCode == 422 || resp.StatusCode == 400 {
 			fmt.Println("   -> ✅ SAFE. Input validation blocked the payload.")
