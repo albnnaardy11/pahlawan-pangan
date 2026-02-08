@@ -168,13 +168,16 @@ func TestFullWorkflowSimulation(t *testing.T) {
 	}
 }
 
-// Wrapper for simple execution
 func TestRun(t *testing.T) {
 	// Only run if server is up
 	resp, err := http.Get(baseURL + "/api/v1/marketplace")
 	if err != nil {
 		t.Skip("Skipping integration test: server not running")
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			t.Logf("Failed to close response body: %v", closeErr)
+		}
+	}()
 	TestFullWorkflowSimulation(t)
 }
