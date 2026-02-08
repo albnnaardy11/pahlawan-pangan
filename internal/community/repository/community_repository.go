@@ -39,7 +39,7 @@ func (r *reviewRepository) GetByTargetID(ctx context.Context, targetID string) (
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var reviews []domain.Review
 	for rows.Next() {

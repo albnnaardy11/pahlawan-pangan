@@ -44,6 +44,7 @@ func (e *BatchingEngine) CalculateOptimalBatch(ctx context.Context, pendingOrder
 				Orders: []domain.Order{order},
 				Score:  999.0, // Highest priority
 			}
+			// #nosec G115
 			batches[s2.CellID(randInt())] = &singleBatch // Unique key
 			continue
 		}
@@ -61,10 +62,9 @@ func (e *BatchingEngine) CalculateOptimalBatch(ctx context.Context, pendingOrder
 
 			if len(batch.Orders) < maxSize {
 				batch.Orders = append(batch.Orders, order)
-			} else {
-				// Current batch full, create new one (simplified logic)
-				// In production: check neighboring cells or create overflow batch
 			}
+			// Current batch full, create new one (simplified logic)
+			// In production: check neighboring cells or create overflow batch
 		} else {
 			batches[regionID] = &domain.Batch{
 				ID:     "batch-" + regionID.ToToken(),

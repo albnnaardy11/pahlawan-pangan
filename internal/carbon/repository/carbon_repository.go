@@ -45,7 +45,7 @@ func (r *carbonRepository) GetByVendorPeriod(ctx context.Context, vendorID strin
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var entries []domain.CarbonEntry
 	for rows.Next() {

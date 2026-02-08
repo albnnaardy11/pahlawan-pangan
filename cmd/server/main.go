@@ -95,7 +95,7 @@ func main() {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr: redisAddr,
 	})
-	defer redisClient.Close()
+	defer func() { _ = redisClient.Close() }()
 	
 	// Legacy cache init (if needed)
 	_ = cache.NewRedisCache(redisAddr)

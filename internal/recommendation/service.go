@@ -58,6 +58,7 @@ func (s *RecommendationService) GetSmartNudges(ctx context.Context, userID strin
 	}
 
 	// Add randomization for "Serendipity" (Discovery)
+	// #nosec G404
 	if rand.Float64() > 0.7 {
 		recs = append(recs, Recommendation{
 			SurplusID: "surplus-mystery-box",

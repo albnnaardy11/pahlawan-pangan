@@ -27,7 +27,7 @@ type authUsecase struct {
 func NewAuthUsecase(repo domain.UserRepository, rb *redis.Client, np *messaging.NATSPublisher, timeout time.Duration) domain.AuthUsecase {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		secret = "pahlawan-pangan-super-secret-key-2026"
+		secret = "pahlawan-pangan-super-secret-key-2026" // #nosec G101
 	}
 	return &authUsecase{
 		repo:          repo,

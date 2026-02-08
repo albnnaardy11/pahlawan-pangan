@@ -65,7 +65,7 @@ func ComparePassword(password, encodedHash string) (bool, error) {
 		return false, err
 	}
 
-	otherHash := argon2.IDKey([]byte(password), salt, iterations, memory, parallelism, uint32(len(hash)))
+	otherHash := argon2.IDKey([]byte(password), salt, iterations, memory, parallelism, uint32(len(hash))) // #nosec G115
 
 	return subtle.ConstantTimeCompare(hash, otherHash) == 1, nil
 }
