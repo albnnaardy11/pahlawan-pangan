@@ -19,6 +19,7 @@ import (
 	"github.com/albnnaardy11/pahlawan-pangan/internal/messaging"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/notifications"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/recommendation"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/trust"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/worker"
 	"github.com/albnnaardy11/pahlawan-pangan/pkg/cache"
@@ -113,6 +114,7 @@ func main() {
 	loadshedder := apiMiddleware.NewAdaptiveLoadShedder(500 * time.Millisecond)
 	r.Use(loadshedder.Handle) // Adaptive Load Shedding
 	r.Use(apiMiddleware.CanarySplitter(10, "v1.1.0-canary")) // 10% Canary Rollout
+	r.Use(apiMiddleware.ChaosMiddleware(logger.Log)) // 🐵 Chaos Monkey
 
 	// Metrics
 	r.Handle("/metrics", promhttp.Handler())
@@ -130,9 +132,12 @@ func main() {
 	
 	// Trust & Safety (Credit Scoring)
 	trustSvc := trust.NewTrustService()
+	
+	// Personalization Engine (Smart Nudges)
+	recSvc := recommendation.NewRecommendationService()
 
 	// 9. Init New API Handler (Unicorn Features)
-	mainHandler := api.NewHandler(db, matchEngine, outboxSvc, loyaltySvc, inventorySvc, trustSvc)
+	mainHandler := api.NewHandler(db, matchEngine, outboxSvc, loyaltySvc, inventorySvc, trustSvc, recSvc)
 	
 	// Mount API V1 Routes
 	r.Mount("/", mainHandler.Routes())

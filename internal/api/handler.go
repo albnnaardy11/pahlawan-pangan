@@ -12,6 +12,7 @@ import (
 	"github.com/albnnaardy11/pahlawan-pangan/internal/loyalty"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/matching"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/outbox"
+	"github.com/albnnaardy11/pahlawan-pangan/internal/recommendation"
 	"github.com/albnnaardy11/pahlawan-pangan/internal/trust"
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
@@ -35,6 +36,7 @@ type Handler struct {
 	loyaltySvc    *loyalty.LoyaltyService
 	inventorySvc  *inventory.InventoryService
 	trustSvc      *trust.TrustService
+	recSvc        *recommendation.RecommendationService
 
 	limiter       *middleware.IPLimiter        // SRE-Guard
 	loadshedder   *middleware.AdaptiveLoadShedder // Damage Control
@@ -47,6 +49,7 @@ func NewHandler(
 	loyaltySvc *loyalty.LoyaltyService,
 	inventorySvc *inventory.InventoryService,
 	trustSvc *trust.TrustService,
+	recSvc *recommendation.RecommendationService,
 ) *Handler {
 	return &Handler{
 		db:            db,
@@ -55,6 +58,7 @@ func NewHandler(
 		loyaltySvc:    loyaltySvc,
 		inventorySvc:  inventorySvc,
 		trustSvc:      trustSvc,
+		recSvc:        recSvc,
 		limiter:       middleware.NewIPLimiter(rate.Limit(50), 100),
 		loadshedder:   middleware.NewAdaptiveLoadShedder(500 * time.Millisecond),
 	}
@@ -143,6 +147,9 @@ func (h *Handler) Routes() http.Handler {
 		r.Get("/leaderboard", h.GetLeaderboard)                   // Loyalty Engine
 		r.Post("/webhooks/inventory", h.HandleInventoryWebhook)   // POS Integration
 		r.Get("/users/{id}/score", h.GetUserScore)                // Social Credit Score
+
+		// --- PHASE 5: PERSONALIZATION ---
+		r.Get("/users/{id}/recommendations", h.GetSmartNudges)
 	})
 
 	return r
@@ -280,9 +287,9 @@ func (h *Handler) ClaimSurplus(w http.ResponseWriter, r *http.Request) {
 	// Update DB (Optimistic Locking - Unicorn Grade)
 	// We only update if the version matches what we last saw (or if it's available)
 	result, err := h.db.ExecContext(ctx, `
-		UPDATE surplus 
-		SET status = 'claimed', 
-		    claimed_by_ngo_id = $1, 
+		UPDATE surplus
+		SET status = 'claimed',
+		    claimed_by_ngo_id = $1,
 		    claimed_at = NOW(),
 		    version = version + 1
 		WHERE id = $2 AND status = 'available'
@@ -809,6 +816,28 @@ func (h *Handler) GetUserScore(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(res)
+}
+
+// GetSmartNudges returns personalized recommendations (Personalization Engine)
+func (h *Handler) GetSmartNudges(w http.ResponseWriter, r *http.Request) {
+	_, span := tracer.Start(r.Context(), "GetSmartNudges")
+	defer span.End()
+
+	userID := chi.URLParam(r, "id")
+	
+	// Mock location (e.g., from header or previous ping)
+	lat := -6.200
+	lon := 106.816
+
+	nudges, err := h.recSvc.GetSmartNudges(r.Context(), userID, lat, lon)
+	if err != nil {
+		span.RecordError(err)
+		http.Error(w, "Failed to get nudges", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(nudges)
 }
 
 
